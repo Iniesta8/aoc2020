@@ -1,17 +1,17 @@
-use std::collections::HashSet;
+use std::collections::HashMap;
 use std::fs;
 
 struct Solution;
 
 impl Solution {
     fn find_sum_pair(data: &Vec<i32>, target: i32) -> Option<(i32, i32)> {
-        let mut set = HashSet::new();
+        let mut set = HashMap::new();
 
         for v in data {
             let comp = target - v;
             match set.get(&comp) {
-                Some(val) => return Some((*val, *v)),
-                None => set.insert(*v),
+                Some(val) => return Some((comp, *val)),
+                None => set.insert(*v, comp),
             };
         }
         None
