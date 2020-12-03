@@ -12,7 +12,7 @@ impl PasswordData {
         let mut token: Vec<&str> = s.split_whitespace().collect();
 
         let pw = token.pop()?.to_string();
-        let ch = token.pop()?.chars().nth(0)?;
+        let ch = token.pop()?.chars().next()?;
         let minmax: Vec<&str> = token.pop()?.split('-').collect();
 
         let min_fromstr = minmax[0].parse().ok()?;
@@ -29,7 +29,7 @@ impl PasswordData {
 
 struct Solution;
 impl Solution {
-    fn part1(pw_data: &Vec<PasswordData>) -> usize {
+    fn part1(pw_data: &[PasswordData]) -> usize {
         pw_data
             .iter()
             .filter(|pdata| {
@@ -39,7 +39,7 @@ impl Solution {
             .count()
     }
 
-    fn part2(pw_data: &Vec<PasswordData>) -> usize {
+    fn part2(pw_data: &[PasswordData]) -> usize {
         pw_data
             .iter()
             .filter(|pdata| {
