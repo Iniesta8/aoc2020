@@ -1,91 +1,76 @@
-use std::{fs, io};
+use std::fs;
+use std::str::FromStr;
 
-#[derive(Debug)]
 struct Map {
     trees: Vec<(usize, usize)>,
     width: usize,
-    depth: usize,
+    height: usize,
 }
 
-impl Map {
-    fn parse_raw_map(raw_map: &String) -> Map {
+impl FromStr for Map {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut width = 0;
-        let mut depth = 0;
+        let mut height = 0;
         let mut trees = vec![];
-        for (i, row) in raw_map.lines().enumerate() {
-            for (j, c) in row.trim().chars().enumerate() {
+
+        for (i, line) in s.lines().enumerate() {
+            for (j, c) in line.trim().chars().enumerate() {
                 if c == '#' {
                     trees.push((j, i));
+                } else if c != '.' {
+                    return Err(format!("unknown symbol '{}'", c));
                 }
                 width = j;
             }
-            depth = i;
+            height = i;
         }
 
-        Map {
+        Ok(Map {
             trees,
             width,
-            depth,
-        }
+            height,
+        })
     }
 }
 
-struct Slope {
-    xdir: usize,
-    ydir: usize,
-}
-
-impl Slope {
-    fn new(xdir: usize, ydir: usize) -> Self {
-        Self { xdir, ydir }
-    }
-}
-
-fn count_trees_on_slope(map: &Map, slope: Slope) -> usize {
+fn count_trees_on_slope(map: &Map, slope: (usize, usize)) -> usize {
     let mut count = 0;
-    let (mut xpos, mut ypos): (usize, usize) = (0, 0);
+    let mut xpos = 0;
+    let mut ypos = 0;
+    let (xdir, ydir) = slope;
 
-    while ypos <= map.depth {
+    while ypos <= map.height {
         if map.trees.contains(&(xpos, ypos)) {
             count += 1;
         }
-
-        xpos += slope.xdir;
-        ypos += slope.ydir;
-
-        if xpos > map.width {
-            xpos = xpos - map.width - 1;
-        }
+        xpos = (xpos + xdir) % (map.width + 1);
+        ypos += ydir;
     }
-
     count
 }
 
-fn evaluate_all_slopes(map: &Map, slopes: Vec<Slope>) -> usize {
+fn evaluate_slopes(map: &Map, slopes: Vec<(usize, usize)>) -> usize {
     slopes
         .into_iter()
         .map(|s| count_trees_on_slope(map, s))
         .product()
 }
 
-fn main() -> io::Result<()> {
-    let raw_map = fs::read_to_string("./input/day03.txt")?;
-    let map = Map::parse_raw_map(&raw_map);
+fn main() {
+    let raw_map = fs::read_to_string("./input/day03.txt").expect("File not found!");
+    let map = match Map::from_str(&raw_map) {
+        Err(e) => {
+            eprintln!("Error on parsing map: {}", e);
+            std::process::exit(-1);
+        }
+        Ok(m) => m,
+    };
 
-    println!("p1: {}", count_trees_on_slope(&map, Slope::new(3, 1)));
+    println!("p1: {}", count_trees_on_slope(&map, (3, 1)));
     println!(
-        "p1: {}",
-        evaluate_all_slopes(
-            &map,
-            vec![
-                Slope::new(1, 1),
-                Slope::new(3, 1),
-                Slope::new(5, 1),
-                Slope::new(7, 1),
-                Slope::new(1, 2)
-            ]
-        )
+        "p2: {}",
+        evaluate_slopes(&map, vec![(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)])
     );
-
-    Ok(())
 }
