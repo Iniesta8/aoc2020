@@ -17,9 +17,7 @@ impl Solution {
         pw_data
             .iter()
             .map(|(min, max, ch, pw)| (min, max, ch, pw.chars().collect::<Vec<char>>()))
-            .filter(|(&min, &max, &ch, pw)| {
-                (pw[min - 1] == ch && pw[max - 1] != ch) || (pw[min - 1] != ch && pw[max - 1] == ch)
-            })
+            .filter(|(&min, &max, &ch, pw)| (pw[min - 1] == ch) ^ (pw[max - 1] == ch))
             .count()
     }
 }
