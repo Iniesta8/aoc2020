@@ -2,8 +2,10 @@ use std::fs;
 
 struct Solution;
 
+type PasswordData = (usize, usize, char, String);
+
 impl Solution {
-    fn part1(pw_data: &Vec<(usize, usize, char, String)>) -> usize {
+    fn part1(pw_data: &Vec<PasswordData>) -> usize {
         pw_data
             .iter()
             .filter(|(min, max, ch, pw)| {
@@ -13,7 +15,7 @@ impl Solution {
             .count()
     }
 
-    fn part2(pw_data: &Vec<(usize, usize, char, String)>) -> usize {
+    fn part2(pw_data: &Vec<PasswordData>) -> usize {
         pw_data
             .iter()
             .map(|(min, max, ch, pw)| (min, max, ch, pw.chars().collect::<Vec<char>>()))
@@ -23,25 +25,24 @@ impl Solution {
 }
 
 fn main() {
-    let lines: String = fs::read_to_string("./input/day02.txt").unwrap();
-    let lines: Vec<&str> = lines.lines().collect();
+    let input: String = fs::read_to_string("./input/day02.txt").unwrap();
+    let lines: Vec<&str> = input.lines().collect();
 
-    let mut pw_data: Vec<(usize, usize, char, String)> = vec![];
+    let mut pw_data: Vec<PasswordData> = vec![];
 
     for l in lines.iter() {
-        let v: Vec<String> = l.split(": ").map(|x| x.to_string()).collect();
+        let mut token: Vec<&str> = l.split_whitespace().collect();
 
-        let mut tmp: (usize, usize, char, String) = (0, 0, ' ', "".to_string());
-        tmp.3 = v[1].clone();
+        let pw = token.pop().unwrap();
+        let ch = token.pop().unwrap().chars().nth(0).unwrap();
+        let minmax: Vec<&str> = token.pop().unwrap().split('-').collect();
 
-        let policy: Vec<&str> = v[0].split(' ').collect();
-        tmp.2 = policy[1].chars().nth(0).unwrap();
-
-        let minmax: Vec<&str> = policy[0].split('-').collect();
-        tmp.0 = minmax[0].parse::<usize>().unwrap();
-        tmp.1 = minmax[1].parse::<usize>().unwrap();
-
-        pw_data.push(tmp);
+        pw_data.push((
+            minmax[0].parse().unwrap(),
+            minmax[1].parse().unwrap(),
+            ch,
+            pw.to_string(),
+        ));
     }
 
     println!("p1: {}", Solution::part1(&pw_data));
