@@ -1,19 +1,19 @@
+use std::collections::HashMap;
 use std::fs;
-use std::{collections::HashMap, num::ParseIntError};
 
 type Passport = HashMap<String, String>;
 
-fn parse_data(passport: &String) -> Passport {
-    let mut res = Passport::new();
-    let data: Vec<String> = passport.split_whitespace().map(|x| x.to_owned()).collect();
+fn parse_batch(batch: &String) -> Passport {
+    let mut pp = Passport::new();
+    let fields: Vec<String> = batch.split_whitespace().map(str::to_owned).collect();
 
-    for p in data.iter() {
-        let mut tmp = p.split(':');
-        let k = tmp.next().unwrap().to_owned();
-        let v = tmp.next().unwrap().to_owned();
-        res.insert(k.clone(), v.clone());
+    for f in fields.iter() {
+        let mut tmp = f.split(':');
+        let k = tmp.next().unwrap().to_owned().clone();
+        let v = tmp.next().unwrap().to_owned().clone();
+        pp.insert(k, v);
     }
-    res
+    pp
 }
 
 fn passport_valid_p1(passport: &Passport) -> bool {
@@ -21,41 +21,23 @@ fn passport_valid_p1(passport: &Passport) -> bool {
     (7 <= len || len <= 8)
         && ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
             .iter()
-            .all(|key| passport.contains_key(*key))
+            .all(|k| passport.contains_key(*k))
 }
 
-fn year_valid(year: &String, min: u32, max: u32) -> Result<bool, ParseIntError> {
-    year.parse::<u32>().map(|y| min <= y && y <= max)
+fn year_valid(year: &String, min: u32, max: u32) -> bool {
+    (min..=max).contains(&year.parse::<u32>().unwrap_or_default())
 }
 
-fn hgt_valid(hgt: &String) -> Result<bool, ParseIntError> {
-    let len = hgt.len();
-
-    if len < 4 || len > 5 {
-        return Ok(false);
-    }
-    let (val, unit) = hgt.split_at(len - 2);
-
-    match unit {
-        "cm" => val.parse::<u32>().map(|h| 150 <= h && h <= 193),
-        "in" => val.parse::<u32>().map(|h| 59 <= h && h <= 76),
-        _ => Ok(false),
-    }
+fn hgt_valid(height: &String) -> bool {
+    let (val, unit) = height.split_at(height.len() - 2);
+    matches!(
+        (val.parse::<u32>(), unit),
+        (Ok(150..=193), "cm") | (Ok(59..=76), "in")
+    )
 }
 
 fn hcl_valid(hcl: &String) -> bool {
-    let len = hcl.len();
-
-    if len != 7 {
-        return false;
-    }
-
-    let mut hcl = hcl.chars();
-    if hcl.next().unwrap() != '#' {
-        return false;
-    }
-
-    hcl.all(|c| c.is_digit(10) || (c.is_lowercase() && c >= 'a' && c <= 'f'))
+    hcl.len() == 7 && hcl.starts_with("#") && hcl.chars().skip(1).all(|c| c.is_ascii_hexdigit())
 }
 
 fn ecl_valid(ecl: &String) -> bool {
@@ -72,10 +54,10 @@ fn passport_valid_p2(passport: &Passport) -> bool {
     }
 
     passport.iter().all(|(k, v)| match k.as_str() {
-        "byr" => year_valid(v, 1920, 2002).unwrap_or(false),
-        "iyr" => year_valid(v, 2010, 2020).unwrap_or(false),
-        "eyr" => year_valid(v, 2020, 2030).unwrap_or(false),
-        "hgt" => hgt_valid(v).unwrap_or(false),
+        "byr" => year_valid(v, 1920, 2002),
+        "iyr" => year_valid(v, 2010, 2020),
+        "eyr" => year_valid(v, 2020, 2030),
+        "hgt" => hgt_valid(v),
         "hcl" => hcl_valid(v),
         "ecl" => ecl_valid(v),
         "pid" => pid_valid(v),
@@ -97,9 +79,9 @@ impl Solution {
 }
 
 fn main() {
-    let input = fs::read_to_string("./input/day04.txt").unwrap();
-    let values: Vec<String> = input.split("\n\n").map(|x| x.to_owned()).collect();
-    let passports: Vec<Passport> = values.iter().map(|pdata| parse_data(&pdata)).collect();
+    let input = fs::read_to_string("./input/day04.txt").expect("File not found!");
+    let batch: Vec<String> = input.split("\n\n").map(str::to_owned).collect();
+    let passports: Vec<Passport> = batch.iter().map(parse_batch).collect();
 
     println!("p1: {}", Solution::part1(&passports));
     println!("p2: {}", Solution::part2(&passports));
