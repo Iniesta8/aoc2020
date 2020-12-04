@@ -17,7 +17,11 @@ fn parse_data(passport: &String) -> Passport {
 }
 
 fn passport_valid_p1(passport: &Passport) -> bool {
-    passport.len() == 8 || (passport.len() == 7 && !passport.contains_key("cid"))
+    let len = passport.len();
+    (7 <= len || len <= 8)
+        && ["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
+            .iter()
+            .all(|key| passport.contains_key(*key))
 }
 
 fn year_valid(year: &String, min: u32, max: u32) -> Result<bool, ParseIntError> {
