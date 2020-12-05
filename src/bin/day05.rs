@@ -14,25 +14,27 @@ fn parse(input: &str) -> u32 {
 struct Solution;
 
 impl Solution {
-    fn part1(input: &String) -> u32 {
-        input.trim().lines().map(parse).max().unwrap()
+    fn part1(seat_ids: &Vec<u32>) -> u32 {
+        *seat_ids.iter().max().unwrap()
     }
 
-    fn part2(input: &String) -> u32 {
-        let seats: HashSet<u32> = input.trim().lines().map(parse).collect();
+    fn part2(seat_ids: &Vec<u32>) -> Option<u32> {
+        let seats: HashSet<u32> = seat_ids.iter().cloned().collect();
 
-        for id in 1..=(128 * 8) {
-            if seats.contains(&(id - 1)) && !seats.contains(&id) && seats.contains(&(id + 1)) {
-                return id;
-            }
-        }
-        0
+        (2..(128 * 8)).into_iter().find(|id| {
+            seats.contains(&(id - 1)) && !seats.contains(&id) && seats.contains(&(id + 1))
+        })
     }
 }
 
 fn main() {
     let input = fs::read_to_string("./input/day05.txt").expect("File not found!");
 
-    println!("p1: {}", Solution::part1(&input));
-    println!("p2: {:?}", Solution::part2(&input));
+    let seat_ids: Vec<u32> = input.trim().lines().map(parse).collect();
+
+    println!("p1: {}", Solution::part1(&seat_ids));
+    println!(
+        "p2: {}",
+        Solution::part2(&seat_ids).expect("Empty seat not found!")
+    );
 }
