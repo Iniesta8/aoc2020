@@ -12,26 +12,15 @@ fn parse(input: &String) -> GroupList {
 struct Solution;
 
 impl Solution {
-    fn part1(groups: &GroupList) -> usize {
+    fn solve(groups: &GroupList, part: usize) -> usize {
         groups
             .iter()
             .map(|g| {
                 g.iter()
-                    .fold(HashSet::new(), |acc, s| {
-                        acc.union(&s).map(|c| c.clone()).collect()
-                    })
-                    .len()
-            })
-            .sum()
-    }
-
-    fn part2(groups: &GroupList) -> usize {
-        groups
-            .iter()
-            .map(|g| {
-                g.iter()
-                    .fold(g[0].clone(), |acc, s| {
-                        acc.intersection(&s).map(|c| c.clone()).collect()
+                    .fold(g[0].clone(), |acc, s| match part {
+                        1 => acc.union(&s).cloned().collect(),
+                        2 => acc.intersection(&s).cloned().collect(),
+                        _ => unimplemented!(),
                     })
                     .len()
             })
@@ -43,6 +32,6 @@ fn main() {
     let input = fs::read_to_string("./input/day06.txt").expect("File not found!");
     let groups = parse(&input);
 
-    println!("p1: {}", Solution::part1(&groups));
-    println!("p2: {}", Solution::part2(&groups));
+    println!("p1: {}", Solution::solve(&groups, 1));
+    println!("p2: {}", Solution::solve(&groups, 2));
 }
