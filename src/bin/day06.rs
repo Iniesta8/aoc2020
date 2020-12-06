@@ -1,8 +1,8 @@
 use std::{collections::HashSet, fs};
 
-type GroupList = Vec<Vec<HashSet<char>>>;
+type Group = Vec<HashSet<char>>;
 
-fn parse(input: &String) -> GroupList {
+fn parse(input: &str) -> Vec<Group> {
     input
         .split("\n\n")
         .map(|g| g.lines().map(|l| l.chars().collect()).collect())
@@ -17,7 +17,7 @@ enum Part {
 struct Solution;
 
 impl Solution {
-    fn solve(groups: &GroupList, part: Part) -> usize {
+    fn solve(groups: &[Group], part: Part) -> usize {
         groups
             .iter()
             .map(|g| {

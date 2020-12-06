@@ -4,7 +4,7 @@ use std::fs;
 struct Solution;
 
 impl Solution {
-    fn find_sum_pair(data: &Vec<i32>, target: i32) -> Option<(i32, i32)> {
+    fn find_sum_pair(data: &[i32], target: i32) -> Option<(i32, i32)> {
         let mut set = HashMap::new();
 
         for v in data {
@@ -17,7 +17,7 @@ impl Solution {
         None
     }
 
-    fn find_sum_triple(data: &Vec<i32>, target: i32) -> Option<(i32, i32, i32)> {
+    fn find_sum_triple(data: &[i32], target: i32) -> Option<(i32, i32, i32)> {
         for v in data {
             let comp = target - v;
             if let Some((a, b)) = Self::find_sum_pair(data, comp) {
@@ -29,14 +29,14 @@ impl Solution {
         None
     }
 
-    fn part1(data: &Vec<i32>, target: i32) -> i32 {
+    fn part1(data: &[i32], target: i32) -> i32 {
         match Self::find_sum_pair(data, target) {
             Some((a, b)) => a * b,
             None => -1,
         }
     }
 
-    fn part2(data: &Vec<i32>, target: i32) -> i32 {
+    fn part2(data: &[i32], target: i32) -> i32 {
         match Self::find_sum_triple(data, target) {
             Some((a, b, c)) => a * b * c,
             None => -1,

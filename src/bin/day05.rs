@@ -14,7 +14,7 @@ fn parse(input: &str) -> u32 {
 struct Solution;
 
 impl Solution {
-    fn part1(seat_ids: &Vec<u32>) -> u32 {
+    fn part1(seat_ids: &[u32]) -> u32 {
         *seat_ids.iter().max().unwrap()
     }
 
