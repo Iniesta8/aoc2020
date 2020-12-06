@@ -1,9 +1,18 @@
 use std::{collections::HashSet, fs};
 
+type GroupList = Vec<Vec<HashSet<char>>>;
+
+fn parse(input: &String) -> GroupList {
+    input
+        .split("\n\n")
+        .map(|g| g.lines().map(|l| l.chars().collect()).collect())
+        .collect()
+}
+
 struct Solution;
 
 impl Solution {
-    fn part1(groups: &Vec<Vec<HashSet<char>>>) -> u32 {
+    fn part1(groups: &GroupList) -> usize {
         groups
             .iter()
             .map(|g| {
@@ -11,12 +20,12 @@ impl Solution {
                     .fold(HashSet::new(), |acc, s| {
                         acc.union(&s).map(|c| c.clone()).collect()
                     })
-                    .len() as u32
+                    .len()
             })
             .sum()
     }
 
-    fn part2(groups: &Vec<Vec<HashSet<char>>>) -> u32 {
+    fn part2(groups: &GroupList) -> usize {
         groups
             .iter()
             .map(|g| {
@@ -24,7 +33,7 @@ impl Solution {
                     .fold(g[0].clone(), |acc, s| {
                         acc.intersection(&s).map(|c| c.clone()).collect()
                     })
-                    .len() as u32
+                    .len()
             })
             .sum()
     }
@@ -32,17 +41,7 @@ impl Solution {
 
 fn main() {
     let input = fs::read_to_string("./input/day06.txt").expect("File not found!");
-    let groups: Vec<Vec<HashSet<char>>> = input
-        .trim()
-        .split("\n\n")
-        .map(|g| {
-            g.to_owned()
-                .split('\n')
-                .filter(|l| !l.is_empty())
-                .map(|l| l.chars().collect())
-                .collect()
-        })
-        .collect();
+    let groups = parse(&input);
 
     println!("p1: {}", Solution::part1(&groups));
     println!("p2: {}", Solution::part2(&groups));
