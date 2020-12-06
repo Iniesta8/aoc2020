@@ -9,18 +9,22 @@ fn parse(input: &String) -> GroupList {
         .collect()
 }
 
+enum Part {
+    Part1,
+    Part2,
+}
+
 struct Solution;
 
 impl Solution {
-    fn solve(groups: &GroupList, part: usize) -> usize {
+    fn solve(groups: &GroupList, part: Part) -> usize {
         groups
             .iter()
             .map(|g| {
                 g.iter()
                     .fold(g[0].clone(), |acc, s| match part {
-                        1 => acc.union(&s).cloned().collect(),
-                        2 => acc.intersection(&s).cloned().collect(),
-                        _ => unimplemented!(),
+                        Part::Part1 => acc.union(&s).cloned().collect(),
+                        Part::Part2 => acc.intersection(&s).cloned().collect(),
                     })
                     .len()
             })
@@ -32,6 +36,6 @@ fn main() {
     let input = fs::read_to_string("./input/day06.txt").expect("File not found!");
     let groups = parse(&input);
 
-    println!("p1: {}", Solution::solve(&groups, 1));
-    println!("p2: {}", Solution::solve(&groups, 2));
+    println!("p1: {}", Solution::solve(&groups, Part::Part1));
+    println!("p2: {}", Solution::solve(&groups, Part::Part2));
 }
