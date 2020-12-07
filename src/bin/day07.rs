@@ -36,7 +36,7 @@ fn parse(input: &str) -> Bags {
     bags
 }
 
-const MY_BAG: &'static str = "shiny gold";
+const MY_BAG: &str = "shiny gold";
 
 struct Solution;
 
