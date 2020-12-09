@@ -1,8 +1,6 @@
 use std::cmp::Ordering;
 use std::fs;
 
-struct Solution;
-
 fn parse(input: &str) -> Vec<usize> {
     input.lines().map(str::parse).flatten().collect()
 }
@@ -38,9 +36,11 @@ fn find_enc_weakness(data: &[usize], target: usize) -> usize {
     data[lower..upper].iter().min().unwrap() + data[lower..upper].iter().max().unwrap()
 }
 
+struct Solution;
+
 impl Solution {
-    fn part1(data: &[usize]) -> Option<usize> {
-        find_invalid_number(&data, 25)
+    fn part1(data: &[usize]) -> usize {
+        find_invalid_number(&data, 25).unwrap()
     }
 
     fn part2(data: &[usize], target: usize) -> usize {
@@ -52,7 +52,7 @@ fn main() {
     let input = fs::read_to_string("./input/day09.txt").expect("File not found!");
     let data = parse(&input);
 
-    let invalid_number = Solution::part1(&data).unwrap();
+    let invalid_number = Solution::part1(&data);
     println!("p1: {}", invalid_number);
     println!("p2: {}", Solution::part2(&data, invalid_number));
 }
