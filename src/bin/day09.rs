@@ -27,14 +27,27 @@ fn find_enc_weakness(data: &[usize], target: usize) -> usize {
 
     loop {
         match data[lower..upper].iter().sum::<usize>().cmp(&target) {
-            Ordering::Greater => lower += 1,
-            Ordering::Equal => break,
             Ordering::Less => upper += 1,
+            Ordering::Equal => break,
+            Ordering::Greater => lower += 1,
         }
     }
 
-    data[lower..upper].iter().min().unwrap() + data[lower..upper].iter().max().unwrap()
+    let (min, max) = data[lower..upper]
+        .iter()
+        .fold((usize::MAX, 0), |(min, max), &v| (v.min(min), v.max(max)));
+
+    min + max
 }
+
+// fn find_enc_weakness(data: &[usize], target: usize) -> Option<usize> {
+// for i in 2..=data.len() {
+// if let Some(v) = data.windows(i).find(|w| target == w.iter().sum()) {
+// return Some(v.iter().max()? + v.iter().min()?);
+// }
+// }
+// None
+// }
 
 struct Solution;
 
@@ -44,7 +57,7 @@ impl Solution {
     }
 
     fn part2(data: &[usize], target: usize) -> usize {
-        find_enc_weakness(&data, target)
+        find_enc_weakness(data, target)
     }
 }
 
