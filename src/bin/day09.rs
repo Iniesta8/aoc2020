@@ -3,11 +3,7 @@ use std::fs;
 struct Solution;
 
 fn parse(input: &str) -> Vec<usize> {
-    input
-        .lines()
-        .map(|e| e.parse::<usize>())
-        .flatten()
-        .collect::<Vec<usize>>()
+    input.lines().map(str::parse).flatten().collect()
 }
 
 fn find_invalid_number(data: &[usize], wlen: usize) -> Option<usize> {
@@ -33,8 +29,12 @@ fn find_enc_weakness(data: &[usize], target: usize) -> usize {
                 continue;
             }
             if data[lower..upper].iter().sum::<usize>() == target {
-                return data[lower..upper].iter().min().unwrap()
-                    + data[lower..upper].iter().max().unwrap();
+                let (min, max) = data[lower..upper]
+                    .iter()
+                    .fold((usize::MAX, usize::MIN), |(min, max), val| {
+                        (*val.min(&min), *val.max(&max))
+                    });
+                return min + max;
             }
         }
     }
