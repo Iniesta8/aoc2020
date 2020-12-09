@@ -1,4 +1,4 @@
-use std::{collections::HashSet, fs};
+use std::fs;
 
 #[derive(Debug)]
 enum Instruction {
@@ -19,7 +19,7 @@ struct GameConsole {
     ip: usize,
     acc: isize,
     memory: Vec<String>,
-    processed: HashSet<usize>,
+    processed: Vec<bool>,
     running: bool,
 }
 
@@ -29,7 +29,7 @@ impl GameConsole {
             ip: 0,
             acc: 0,
             memory: program.lines().map(str::to_owned).collect(),
-            processed: HashSet::new(),
+            processed: vec![false; program.lines().count()],
             running: false,
         }
     }
@@ -101,9 +101,10 @@ impl GameConsole {
             }
         }
 
-        if !self.processed.insert(self.ip) {
+        if self.processed[self.ip - 1] {
             return Some(Event::InfiniteLoop);
         }
+        self.processed[self.ip - 1] = true;
 
         None
     }
@@ -122,10 +123,8 @@ struct Solution;
 
 impl Solution {
     fn part1(console: &mut GameConsole) -> isize {
-        if let Some(ev) = console.run_until_event() {
-            if ev == Event::InfiniteLoop {
-                return console.acc;
-            }
+        if let Some(Event::InfiniteLoop) = console.run_until_event() {
+            return console.acc;
         }
         -1
     }
@@ -139,10 +138,8 @@ impl Solution {
                 let mut console = console.clone();
                 console.change_operation(address, new_mem_line);
 
-                if let Some(event) = console.run_until_event() {
-                    if event == Event::Halted {
-                        return console.acc;
-                    }
+                if let Some(Event::Halted) = console.run_until_event() {
+                    return console.acc;
                 }
             }
         }
@@ -152,10 +149,10 @@ impl Solution {
 
 fn main() {
     let input = fs::read_to_string("./input/day08.txt").expect("File not found!");
-    let mut console = GameConsole::from_program(&input);
-    let mut console_a = console.clone();
-    println!("p1: {}", Solution::part1(&mut console_a));
-    println!("p2: {}", Solution::part2(&mut console));
+    let mut console1 = GameConsole::from_program(&input);
+    let mut console2 = console1.clone();
+    println!("p1: {}", Solution::part1(&mut console2));
+    println!("p2: {}", Solution::part2(&mut console1));
 }
 
 #[cfg(test)]
@@ -164,7 +161,7 @@ mod tests {
 
     #[test]
     fn test_console() {
-        let mut console = GameConsole::from_program(
+        let mut console1 = GameConsole::from_program(
             "\
 nop +0
 acc +1
@@ -176,7 +173,8 @@ acc +1
 jmp -4
 acc +6",
         );
-        assert_eq!(Solution::part1(&mut console), 5);
-        assert_eq!(Solution::part2(&mut console), 8);
+        let mut console2 = console1.clone();
+        assert_eq!(Solution::part1(&mut console1), 5);
+        assert_eq!(Solution::part2(&mut console2), 8);
     }
 }
