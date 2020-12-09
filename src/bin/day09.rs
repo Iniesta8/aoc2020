@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::fs;
 
 struct Solution;
@@ -23,22 +24,18 @@ fn find_invalid_number(data: &[usize], wlen: usize) -> Option<usize> {
 }
 
 fn find_enc_weakness(data: &[usize], target: usize) -> usize {
-    for lower in 0..data.len() {
-        for upper in 0..data.len() {
-            if lower > upper {
-                continue;
-            }
-            if data[lower..upper].iter().sum::<usize>() == target {
-                let (min, max) = data[lower..upper]
-                    .iter()
-                    .fold((usize::MAX, usize::MIN), |(min, max), val| {
-                        (*val.min(&min), *val.max(&max))
-                    });
-                return min + max;
-            }
+    let mut lower = 0;
+    let mut upper = 1;
+
+    loop {
+        match data[lower..upper].iter().sum::<usize>().cmp(&target) {
+            Ordering::Greater => lower += 1,
+            Ordering::Equal => break,
+            Ordering::Less => upper += 1,
         }
     }
-    0
+
+    data[lower..upper].iter().min().unwrap() + data[lower..upper].iter().max().unwrap()
 }
 
 impl Solution {
