@@ -9,3 +9,4 @@ My Rust solutions to Advent of Code 2020
 - [day 6](src/bin/day06.rs)
 - [day 7](src/bin/day07.rs)
 - [day 8](src/bin/day08.rs)
+- [day 9](src/bin/day09.rs)
