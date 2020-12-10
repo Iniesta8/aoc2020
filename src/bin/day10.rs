@@ -41,8 +41,8 @@ impl Solution {
     }
 
     fn part2(adapters: &[usize]) -> usize {
-        // number of possible combinations per diff-one-sequence's len
-        // (0 -> 1)
+        // number of possible combinations/paths per diff-one-sequence's len
+        // 0 -> 1
         // 1 -> 1
         // 2 -> 2
         // 3 -> 4
@@ -72,8 +72,8 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() {
-        let input = "\
+    fn test_solution() {
+        let input1 = "\
 16
 10
 15
@@ -85,8 +85,49 @@ mod tests {
 6
 12
 4";
-        let mut adapters = parse(&input);
+        let mut adapters = parse(&input1);
         build_chain(&mut adapters);
+
         assert_eq!(Solution::part1(&adapters), 35);
+        assert_eq!(Solution::part2(&adapters), 8);
+
+        let input2 = "\
+28
+33
+18
+42
+31
+14
+46
+20
+48
+47
+24
+23
+49
+45
+19
+38
+39
+11
+1
+32
+25
+35
+8
+17
+7
+9
+4
+2
+34
+10
+3";
+
+        adapters = parse(&input2);
+        build_chain(&mut adapters);
+
+        assert_eq!(Solution::part1(&adapters), 220);
+        assert_eq!(Solution::part2(&adapters), 19208);
     }
 }
