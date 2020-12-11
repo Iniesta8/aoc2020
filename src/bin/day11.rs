@@ -1,34 +1,25 @@
-use std::collections::HashMap;
 use std::fs;
 
-type Seats = HashMap<(i32, i32), bool>;
+type Grid = Vec<Vec<char>>;
 
-fn parse(input: &str) -> Seats {
-    let mut seats = HashMap::new();
+fn parse(input: &str) -> Grid {
+    input.lines().map(|l| l.chars().collect()).collect()
+}
 
-    for (i, r) in input.lines().enumerate() {
-        for (j, tile) in r.chars().enumerate() {
-            match tile {
-                'L' => seats.insert((i as i32, j as i32), false),
-                '#' => seats.insert((i as i32, j as i32), true),
-                _ => continue,
-            };
+fn occupy_all_seats(grid: &mut Grid) {
+    for i in 0..grid.len() {
+        for j in 0..grid[0].len() {
+            if grid[i][j] == 'L' {
+                grid[i][j] = '#';
+            }
         }
     }
-
-    seats
 }
 
-fn occupy_all_seats(seats: &mut Seats) {
-    for s in seats.values_mut() {
-        *s = true;
-    }
-}
-
-fn count_adjacent_occupied_seats(seats: &Seats, pos: (i32, i32)) -> usize {
+fn count_adjacent_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
     let (x, y) = pos;
 
-    let adjacent_pos = vec![
+    let adjacent_pos: Vec<(i32, i32)> = [
         (x, y + 1),
         (x + 1, y + 1),
         (x + 1, y),
@@ -37,15 +28,21 @@ fn count_adjacent_occupied_seats(seats: &Seats, pos: (i32, i32)) -> usize {
         (x - 1, y - 1),
         (x - 1, y),
         (x - 1, y + 1),
-    ];
+    ]
+    .iter()
+    .filter(|pos| {
+        pos.0 >= 0 && pos.0 < grid.len() as i32 && pos.1 >= 0 && pos.1 < grid[0].len() as i32
+    })
+    .copied()
+    .collect();
 
     adjacent_pos
         .into_iter()
-        .filter(|pos| seats.contains_key(pos) && *seats.get(pos).unwrap())
+        .filter(|pos| grid[pos.0 as usize][pos.1 as usize] == '#')
         .count()
 }
 
-fn count_visible_occupied_seats(seats: &Seats, pos: (i32, i32)) -> usize {
+fn count_visible_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
     let (x, y) = pos;
     let mut count = 0;
 
@@ -61,81 +58,89 @@ fn count_visible_occupied_seats(seats: &Seats, pos: (i32, i32)) -> usize {
     ];
 
     for (dir_x, dir_y) in directions.iter() {
-        for i in 1..=20 {
-            let target = (x + i * dir_x, y + i * dir_y);
-            if seats.contains_key(&target) {
-                if *seats.get(&target).unwrap() {
+        let mut xi = x + dir_x;
+        let mut yi = y + dir_y;
+        while (0..grid.len()).contains(&(xi as usize))
+            && (0..grid[0].len()).contains(&(yi as usize))
+        {
+            match grid[xi as usize][yi as usize] {
+                '#' => {
                     count += 1;
+                    break;
                 }
-                break;
+                'L' => break,
+                _ => (),
             }
+
+            xi += dir_x;
+            yi += dir_y;
         }
     }
 
     count
 }
 
-fn simulate_once<F>(seats: &mut Seats, threshold: usize, count_func: F) -> bool
+fn simulate_once<F>(grid: &mut Grid, threshold: usize, count_func: F) -> bool
 where
-    F: Fn(&Seats, (i32, i32)) -> usize,
+    F: Fn(&Grid, (i32, i32)) -> usize,
 {
-    let cur_seats = seats.clone();
+    let cur_grid = grid.clone();
     let mut changed = false;
 
-    for (&pos, &occupied) in cur_seats.iter() {
-        match count_func(&cur_seats, pos) {
-            0 if !occupied => {
-                seats.insert(pos, true);
-                changed = true;
+    for (i, row) in cur_grid.iter().enumerate() {
+        for (j, &c) in row.iter().enumerate() {
+            match count_func(&cur_grid, (i as i32, j as i32)) {
+                0 if c == 'L' => {
+                    grid[i][j] = '#';
+                    changed = true;
+                }
+                val if c == '#' && val >= threshold => {
+                    grid[i][j] = 'L';
+                    changed = true;
+                }
+                _ => continue,
             }
-            val if occupied && val >= threshold => {
-                seats.insert(pos, false);
-                changed = true;
-            }
-            _ => continue,
         }
     }
 
     changed
 }
 
-fn count_occupied_seats(seats: &Seats) -> usize {
-    seats.values().filter(|&occ| *occ == true).count()
+fn count_occupied_seats(grid: &Grid) -> usize {
+    grid.iter().flatten().filter(|&c| *c == '#').count()
 }
 
 struct Solution;
 
 impl Solution {
-    fn part1(mut seats: &mut Seats) -> usize {
+    fn part1(mut grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut seats, 4, count_adjacent_occupied_seats) {
+            if !simulate_once(&mut grid, 4, count_adjacent_occupied_seats) {
                 break;
             }
         }
-        count_occupied_seats(seats)
+        count_occupied_seats(grid)
     }
 
-    fn part2(mut seats: &mut Seats) -> usize {
+    fn part2(mut grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut seats, 5, count_visible_occupied_seats) {
+            if !simulate_once(&mut grid, 5, count_visible_occupied_seats) {
                 break;
             }
         }
-        count_occupied_seats(seats)
+        count_occupied_seats(grid)
     }
 }
 
 fn main() {
     let input = fs::read_to_string("./input/day11.txt").expect("File not found!");
-    let mut seats = parse(&input);
+    let mut grid = parse(&input);
 
-    let mut seats_b = seats.clone();
+    occupy_all_seats(&mut grid);
+    let mut grid_p2 = grid.clone();
 
-    occupy_all_seats(&mut seats);
-    println!("p1: {}", Solution::part1(&mut seats));
-
-    occupy_all_seats(&mut seats_b);
-    println!("p2: {}", Solution::part2(&mut seats_b));
+    println!("p1: {}", Solution::part1(&mut grid));
+    println!("p2: {}", Solution::part2(&mut grid_p2));
 }
 
 #[cfg(test)]
@@ -155,11 +160,11 @@ L.LLLLL.LL
 LLLLLLLLLL
 L.LLLLLL.L
 L.LLLLL.LL";
-        let mut seats = parse(&input1);
-        occupy_all_seats(&mut seats);
-        let mut seats_p2 = seats.clone();
+        let mut grid = parse(&input1);
+        occupy_all_seats(&mut grid);
+        let mut grid_p2 = grid.clone();
 
-        assert_eq!(Solution::part1(&mut seats), 37);
-        assert_eq!(Solution::part2(&mut seats_p2), 26);
+        assert_eq!(Solution::part1(&mut grid), 37);
+        assert_eq!(Solution::part2(&mut grid_p2), 26);
     }
 }
