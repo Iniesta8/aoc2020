@@ -80,7 +80,7 @@ fn count_visible_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
     count
 }
 
-fn simulate_once<F>(grid: &mut Grid, threshold: usize, count_func: F) -> bool
+fn simulate_once<F>(grid: &mut Grid, count_func: F, threshold: usize) -> bool
 where
     F: Fn(&Grid, (i32, i32)) -> usize,
 {
@@ -89,16 +89,16 @@ where
 
     for (i, row) in cur_grid.iter().enumerate() {
         for (j, &c) in row.iter().enumerate() {
-            match count_func(&cur_grid, (i as i32, j as i32)) {
-                0 if c == 'L' => {
+            match c {
+                'L' if count_func(&cur_grid, (i as i32, j as i32)) == 0 => {
                     grid[i][j] = '#';
                     changed = true;
                 }
-                val if c == '#' && val >= threshold => {
+                '#' if count_func(&cur_grid, (i as i32, j as i32)) >= threshold => {
                     grid[i][j] = 'L';
                     changed = true;
                 }
-                _ => continue,
+                c => grid[i][j] = c,
             }
         }
     }
@@ -115,7 +115,7 @@ struct Solution;
 impl Solution {
     fn part1(mut grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut grid, 4, count_adjacent_occupied_seats) {
+            if !simulate_once(&mut grid, count_adjacent_occupied_seats, 4) {
                 break;
             }
         }
@@ -124,7 +124,7 @@ impl Solution {
 
     fn part2(mut grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut grid, 5, count_visible_occupied_seats) {
+            if !simulate_once(&mut grid, count_visible_occupied_seats, 5) {
                 break;
             }
         }
