@@ -34,7 +34,7 @@ enum Instruction {
     Forward(i32),
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 enum Direction {
     North,
     East,
@@ -47,11 +47,13 @@ enum Turn {
     Right,
 }
 
+#[derive(Clone)]
 struct Ferry {
     facing: Direction,
     x: i32,
     y: i32,
     instructions: Vec<Instruction>,
+    waypoint: (i32, i32),
 }
 
 impl Ferry {
@@ -61,7 +63,12 @@ impl Ferry {
             x: 0,
             y: 0,
             instructions: parse(&input),
+            waypoint: (10, 1),
         }
+    }
+
+    fn dist_from_start(&self) -> i32 {
+        self.x.abs() + self.y.abs()
     }
 
     fn drift(&mut self, dir: Direction, dist: i32) {
@@ -108,7 +115,7 @@ impl Ferry {
         }
     }
 
-    fn process_instructions(&mut self) {
+    fn process_instructions_immediate(&mut self) {
         let instructions = self.instructions.clone();
         for inst in instructions.iter() {
             match inst {
@@ -123,8 +130,61 @@ impl Ferry {
         }
     }
 
-    fn dist_from_start(&self) -> i32 {
-        self.x.abs() + self.y.abs()
+    fn update_waypoint(&mut self, instr: Instruction) {
+        match instr {
+            Instruction::North(value) => self.waypoint.1 += value,
+            Instruction::South(value) => self.waypoint.1 -= value,
+            Instruction::East(value) => self.waypoint.0 += value,
+            Instruction::West(value) => self.waypoint.0 -= value,
+            Instruction::Left(degrees) => self.rotate_waypoint(Turn::Left, degrees),
+            Instruction::Right(degrees) => self.rotate_waypoint(Turn::Right, degrees),
+            _ => panic!("unknown waypoint instruction {:?}", instr),
+        }
+    }
+
+    fn rotate_waypoint(&mut self, turn: Turn, degrees: i32) {
+        match turn {
+            Turn::Left => match degrees {
+                90 => self.waypoint = (-self.waypoint.1, self.waypoint.0),
+                180 => self.waypoint = (-self.waypoint.0, -self.waypoint.1),
+                270 => self.waypoint = (self.waypoint.1, -self.waypoint.0),
+                _ => panic!(
+                    "unknown waypoint rotation to the left by {} degrees",
+                    degrees
+                ),
+            },
+            Turn::Right => match degrees {
+                90 => self.rotate_waypoint(Turn::Left, 270),
+                180 => self.rotate_waypoint(Turn::Left, 180),
+                270 => self.rotate_waypoint(Turn::Left, 90),
+                _ => panic!(
+                    "unknown waypoint rotation to the right by {} degrees",
+                    degrees
+                ),
+            },
+        }
+    }
+
+    fn move_towards_waypoint(&mut self, times: i32) {
+        self.x += times * self.waypoint.0;
+        self.y += times * self.waypoint.1
+    }
+
+    fn process_instructions_relative(&mut self) {
+        let instructions = self.instructions.clone();
+        for inst in instructions.iter() {
+            println!("\npos ship: ({}, {})", self.x, self.y);
+            println!("pos waypoint: ({}, {})", self.waypoint.0, self.waypoint.1);
+            match inst {
+                Instruction::North(_) => self.update_waypoint(*inst),
+                Instruction::South(_) => self.update_waypoint(*inst),
+                Instruction::East(_) => self.update_waypoint(*inst),
+                Instruction::West(_) => self.update_waypoint(*inst),
+                Instruction::Left(degrees) => self.rotate_waypoint(Turn::Left, *degrees),
+                Instruction::Right(degrees) => self.rotate_waypoint(Turn::Right, *degrees),
+                Instruction::Forward(times) => self.move_towards_waypoint(*times),
+            }
+        }
     }
 }
 
@@ -132,7 +192,12 @@ struct Solution;
 
 impl Solution {
     fn part1(ferry: &mut Ferry) -> i32 {
-        ferry.process_instructions();
+        ferry.process_instructions_immediate();
+        ferry.dist_from_start()
+    }
+
+    fn part2(ferry: &mut Ferry) -> i32 {
+        ferry.process_instructions_relative();
         ferry.dist_from_start()
     }
 }
@@ -141,5 +206,37 @@ fn main() {
     let input = fs::read_to_string("./input/day12.txt").expect("File not found!");
     let mut ferry = Ferry::with_instructions(&input);
 
+    let mut ferry2 = ferry.clone();
+
     println!("p1: {}", Solution::part1(&mut ferry));
+    println!("p2: {}", Solution::part2(&mut ferry2));
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part1() {
+        let input = "\
+F10
+N3
+F7
+R90
+F11";
+        let mut ferry = Ferry::with_instructions(&input);
+        assert_eq!(Solution::part1(&mut ferry), 25);
+    }
+
+    #[test]
+    fn test_part2() {
+        let input = "\
+F10
+N3
+F7
+R90
+F11";
+        let mut ferry = Ferry::with_instructions(&input);
+        assert_eq!(Solution::part2(&mut ferry), 286);
+    }
 }
