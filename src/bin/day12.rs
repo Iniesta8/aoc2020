@@ -35,96 +35,59 @@ enum Instruction {
     Forward(i32),
 }
 
-#[derive(Clone, Debug, PartialEq)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
-
-enum Turn {
-    Left,
-    Right,
-}
+type Direction = (i32, i32);
 
 #[derive(Clone, Debug)]
 struct Ferry {
-    facing: Direction,
-    x: i32,
-    y: i32,
-    instructions: Vec<Instruction>,
+    facing: i32,
+    position: (i32, i32),
     waypoint: (i32, i32),
 }
 
 impl Ferry {
-    fn with_instructions(input: &str) -> Self {
+    fn new() -> Self {
         Self {
-            facing: Direction::East,
-            x: 0,
-            y: 0,
-            instructions: parse(&input),
+            facing: 90, // Direction::East,
+            position: (0, 0),
             waypoint: (10, 1),
         }
     }
 
     fn dist_from_start(&self) -> i32 {
-        self.x.abs() + self.y.abs()
+        self.position.0.abs() + self.position.1.abs()
     }
 
     fn drift(&mut self, dir: Direction, dist: i32) {
-        match dir {
-            Direction::North => self.y += dist,
-            Direction::East => self.x += dist,
-            Direction::South => self.y -= dist,
-            Direction::West => self.x -= dist,
-        }
+        self.position = (
+            self.position.0 + dir.0 * dist,
+            self.position.1 + dir.1 * dist,
+        );
     }
 
     fn move_forward(&mut self, dist: i32) {
         match self.facing {
-            Direction::North => self.y += dist,
-            Direction::East => self.x += dist,
-            Direction::South => self.y -= dist,
-            Direction::West => self.x -= dist,
+            0 => self.position.1 += dist,
+            90 => self.position.0 += dist,
+            180 => self.position.1 -= dist,
+            270 => self.position.0 -= dist,
+            _ => panic!("unknown current facing {}", self.facing),
         }
     }
 
     fn turn(&mut self, degrees: i32) {
-        let degrees = if degrees < 0 { 360 + degrees } else { degrees };
-        match degrees {
-            90 if self.facing == Direction::North => self.facing = Direction::East,
-            90 if self.facing == Direction::East => self.facing = Direction::South,
-            90 if self.facing == Direction::South => self.facing = Direction::West,
-            90 if self.facing == Direction::West => self.facing = Direction::North,
-            180 if self.facing == Direction::North => self.facing = Direction::South,
-            180 if self.facing == Direction::East => self.facing = Direction::West,
-            180 if self.facing == Direction::South => self.facing = Direction::North,
-            180 if self.facing == Direction::West => self.facing = Direction::East,
-            270 if self.facing == Direction::North => self.facing = Direction::West,
-            270 if self.facing == Direction::East => self.facing = Direction::North,
-            270 if self.facing == Direction::South => self.facing = Direction::East,
-            270 if self.facing == Direction::West => self.facing = Direction::South,
-            _ => panic!("unknown turn by {} degrees", degrees),
-        }
+        self.facing = (self.facing + degrees).rem_euclid(360);
     }
 
-    fn process_instructions_immediate(&mut self) {
-        let instructions = self.instructions.clone();
-
+    fn process_instructions_immediate(&mut self, instructions: &Vec<Instruction>) {
         for instr in instructions {
-            println!(
-                "pos ship: ({}, {}), facing: {:?}",
-                self.x, self.y, self.facing
-            );
             match instr {
-                Instruction::North(dist) => self.drift(Direction::North, dist),
-                Instruction::South(dist) => self.drift(Direction::South, dist),
-                Instruction::East(dist) => self.drift(Direction::East, dist),
-                Instruction::West(dist) => self.drift(Direction::West, dist),
-                Instruction::Left(degrees) => self.turn(-degrees),
-                Instruction::Right(degrees) => self.turn(degrees),
-                Instruction::Forward(dist) => self.move_forward(dist),
+                Instruction::North(dist) => self.drift((0, 1), *dist),
+                Instruction::South(dist) => self.drift((0, -1), *dist),
+                Instruction::East(dist) => self.drift((1, 0), *dist),
+                Instruction::West(dist) => self.drift((-1, 0), *dist),
+                Instruction::Left(degrees) => self.turn(-(*degrees)),
+                Instruction::Right(degrees) => self.turn(*degrees),
+                Instruction::Forward(dist) => self.move_forward(*dist),
             }
         }
     }
@@ -142,8 +105,7 @@ impl Ferry {
     }
 
     fn rotate_waypoint(&mut self, degrees: i32) {
-        let degrees = if degrees < 0 { 360 + degrees } else { degrees };
-        match degrees {
+        match degrees.rem_euclid(360) {
             90 => self.waypoint = (self.waypoint.1, -self.waypoint.0),
             180 => self.waypoint = (-self.waypoint.0, -self.waypoint.1),
             270 => self.waypoint = (-self.waypoint.1, self.waypoint.0),
@@ -152,13 +114,12 @@ impl Ferry {
     }
 
     fn move_towards_waypoint(&mut self, times: i32) {
-        self.x += times * self.waypoint.0;
-        self.y += times * self.waypoint.1
+        self.position.0 += times * self.waypoint.0;
+        self.position.1 += times * self.waypoint.1
     }
 
-    fn process_instructions_relative(&mut self) {
-        let instructions = self.instructions.clone();
-        for inst in instructions.iter() {
+    fn process_instructions_relative(&mut self, instructions: &Vec<Instruction>) {
+        for inst in instructions {
             match inst {
                 Instruction::Forward(times) => self.move_towards_waypoint(*times),
                 _ => self.update_waypoint(*inst),
@@ -170,34 +131,35 @@ impl Ferry {
 struct Solution;
 
 impl Solution {
-    fn part1(ferry: &mut Ferry) -> i32 {
-        ferry.process_instructions_immediate();
+    fn part1(ferry: &mut Ferry, instructions: &Vec<Instruction>) -> i32 {
+        ferry.process_instructions_immediate(&instructions);
         ferry.dist_from_start()
     }
 
-    fn part2(ferry: &mut Ferry) -> i32 {
-        ferry.process_instructions_relative();
+    fn part2(ferry: &mut Ferry, instructions: &Vec<Instruction>) -> i32 {
+        ferry.process_instructions_relative(&instructions);
         ferry.dist_from_start()
     }
 }
 
 fn main() {
     let input = fs::read_to_string("./input/day12.txt").expect("File not found!");
-    let mut ferry = Ferry::with_instructions(&input);
+    let instructions = parse(&input);
 
+    let mut ferry = Ferry::new();
     let mut ferry2 = ferry.clone();
 
     let mut timer = Instant::now();
     println!(
         "p1: {} (runtime: {:?})",
-        Solution::part1(&mut ferry),
+        Solution::part1(&mut ferry, &instructions),
         timer.elapsed()
     );
 
     timer = Instant::now();
     println!(
         "p2: {} (runtime: {:?})",
-        Solution::part2(&mut ferry2),
+        Solution::part2(&mut ferry2, &instructions),
         timer.elapsed()
     );
 }
@@ -214,8 +176,8 @@ N3
 F7
 R90
 F11";
-        let mut ferry = Ferry::with_instructions(&input);
-        assert_eq!(Solution::part1(&mut ferry), 25);
+        let mut ferry = Ferry::new();
+        assert_eq!(Solution::part1(&mut ferry, &parse(&input)), 25);
     }
 
     #[test]
@@ -226,7 +188,7 @@ N3
 F7
 R90
 F11";
-        let mut ferry = Ferry::with_instructions(&input);
-        assert_eq!(Solution::part2(&mut ferry), 286);
+        let mut ferry = Ferry::new();
+        assert_eq!(Solution::part2(&mut ferry, &parse(&input)), 286);
     }
 }
