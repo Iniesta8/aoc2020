@@ -35,7 +35,7 @@ enum Instruction {
     Forward(i32),
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 enum Direction {
     North,
     East,
@@ -48,7 +48,7 @@ enum Turn {
     Right,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Ferry {
     facing: Direction,
     x: i32,
@@ -90,43 +90,41 @@ impl Ferry {
         }
     }
 
-    fn turn(&mut self, turn: Turn, degrees: i32) {
-        match turn {
-            Turn::Left => match degrees {
-                90 if self.facing == Direction::North => self.facing = Direction::West,
-                90 if self.facing == Direction::East => self.facing = Direction::North,
-                90 if self.facing == Direction::South => self.facing = Direction::East,
-                90 if self.facing == Direction::West => self.facing = Direction::South,
-                180 if self.facing == Direction::North => self.facing = Direction::South,
-                180 if self.facing == Direction::East => self.facing = Direction::West,
-                180 if self.facing == Direction::South => self.facing = Direction::North,
-                180 if self.facing == Direction::West => self.facing = Direction::East,
-                270 if self.facing == Direction::North => self.facing = Direction::East,
-                270 if self.facing == Direction::East => self.facing = Direction::South,
-                270 if self.facing == Direction::South => self.facing = Direction::West,
-                270 if self.facing == Direction::West => self.facing = Direction::North,
-                _ => panic!("unknown turn to the left by {} degrees", degrees),
-            },
-            Turn::Right => match degrees {
-                90 => self.turn(Turn::Left, 270),
-                180 => self.turn(Turn::Left, 180),
-                270 => self.turn(Turn::Left, 90),
-                _ => panic!("unknown turn to the right by {} degrees", degrees),
-            },
+    fn turn(&mut self, degrees: i32) {
+        let degrees = if degrees < 0 { 360 + degrees } else { degrees };
+        match degrees {
+            90 if self.facing == Direction::North => self.facing = Direction::East,
+            90 if self.facing == Direction::East => self.facing = Direction::South,
+            90 if self.facing == Direction::South => self.facing = Direction::West,
+            90 if self.facing == Direction::West => self.facing = Direction::North,
+            180 if self.facing == Direction::North => self.facing = Direction::South,
+            180 if self.facing == Direction::East => self.facing = Direction::West,
+            180 if self.facing == Direction::South => self.facing = Direction::North,
+            180 if self.facing == Direction::West => self.facing = Direction::East,
+            270 if self.facing == Direction::North => self.facing = Direction::West,
+            270 if self.facing == Direction::East => self.facing = Direction::North,
+            270 if self.facing == Direction::South => self.facing = Direction::East,
+            270 if self.facing == Direction::West => self.facing = Direction::South,
+            _ => panic!("unknown turn by {} degrees", degrees),
         }
     }
 
     fn process_instructions_immediate(&mut self) {
         let instructions = self.instructions.clone();
-        for inst in instructions.iter() {
-            match inst {
-                Instruction::North(dist) => self.drift(Direction::North, *dist),
-                Instruction::South(dist) => self.drift(Direction::South, *dist),
-                Instruction::East(dist) => self.drift(Direction::East, *dist),
-                Instruction::West(dist) => self.drift(Direction::West, *dist),
-                Instruction::Left(degrees) => self.turn(Turn::Left, *degrees),
-                Instruction::Right(degrees) => self.turn(Turn::Right, *degrees),
-                Instruction::Forward(dist) => self.move_forward(*dist),
+
+        for instr in instructions {
+            println!(
+                "pos ship: ({}, {}), facing: {:?}",
+                self.x, self.y, self.facing
+            );
+            match instr {
+                Instruction::North(dist) => self.drift(Direction::North, dist),
+                Instruction::South(dist) => self.drift(Direction::South, dist),
+                Instruction::East(dist) => self.drift(Direction::East, dist),
+                Instruction::West(dist) => self.drift(Direction::West, dist),
+                Instruction::Left(degrees) => self.turn(-degrees),
+                Instruction::Right(degrees) => self.turn(degrees),
+                Instruction::Forward(dist) => self.move_forward(dist),
             }
         }
     }
@@ -137,32 +135,19 @@ impl Ferry {
             Instruction::South(value) => self.waypoint.1 -= value,
             Instruction::East(value) => self.waypoint.0 += value,
             Instruction::West(value) => self.waypoint.0 -= value,
-            Instruction::Left(degrees) => self.rotate_waypoint(Turn::Left, degrees),
-            Instruction::Right(degrees) => self.rotate_waypoint(Turn::Right, degrees),
+            Instruction::Left(degrees) => self.rotate_waypoint(-degrees),
+            Instruction::Right(degrees) => self.rotate_waypoint(degrees),
             _ => panic!("unknown waypoint instruction {:?}", instr),
         }
     }
 
-    fn rotate_waypoint(&mut self, turn: Turn, degrees: i32) {
-        match turn {
-            Turn::Left => match degrees {
-                90 => self.waypoint = (-self.waypoint.1, self.waypoint.0),
-                180 => self.waypoint = (-self.waypoint.0, -self.waypoint.1),
-                270 => self.waypoint = (self.waypoint.1, -self.waypoint.0),
-                _ => panic!(
-                    "unknown waypoint rotation to the left by {} degrees",
-                    degrees
-                ),
-            },
-            Turn::Right => match degrees {
-                90 => self.rotate_waypoint(Turn::Left, 270),
-                180 => self.rotate_waypoint(Turn::Left, 180),
-                270 => self.rotate_waypoint(Turn::Left, 90),
-                _ => panic!(
-                    "unknown waypoint rotation to the right by {} degrees",
-                    degrees
-                ),
-            },
+    fn rotate_waypoint(&mut self, degrees: i32) {
+        let degrees = if degrees < 0 { 360 + degrees } else { degrees };
+        match degrees {
+            90 => self.waypoint = (self.waypoint.1, -self.waypoint.0),
+            180 => self.waypoint = (-self.waypoint.0, -self.waypoint.1),
+            270 => self.waypoint = (-self.waypoint.1, self.waypoint.0),
+            _ => panic!("unknown waypoint rotation by {} degrees", degrees),
         }
     }
 
