@@ -1,4 +1,5 @@
 use std::fs;
+use std::time::Instant;
 
 fn parse(input: &str) -> Vec<Instruction> {
     input
@@ -173,16 +174,9 @@ impl Ferry {
     fn process_instructions_relative(&mut self) {
         let instructions = self.instructions.clone();
         for inst in instructions.iter() {
-            println!("\npos ship: ({}, {})", self.x, self.y);
-            println!("pos waypoint: ({}, {})", self.waypoint.0, self.waypoint.1);
             match inst {
-                Instruction::North(_) => self.update_waypoint(*inst),
-                Instruction::South(_) => self.update_waypoint(*inst),
-                Instruction::East(_) => self.update_waypoint(*inst),
-                Instruction::West(_) => self.update_waypoint(*inst),
-                Instruction::Left(degrees) => self.rotate_waypoint(Turn::Left, *degrees),
-                Instruction::Right(degrees) => self.rotate_waypoint(Turn::Right, *degrees),
                 Instruction::Forward(times) => self.move_towards_waypoint(*times),
+                _ => self.update_waypoint(*inst),
             }
         }
     }
@@ -208,8 +202,19 @@ fn main() {
 
     let mut ferry2 = ferry.clone();
 
-    println!("p1: {}", Solution::part1(&mut ferry));
-    println!("p2: {}", Solution::part2(&mut ferry2));
+    let mut timer = Instant::now();
+    println!(
+        "p1: {} (runtime: {:?})",
+        Solution::part1(&mut ferry),
+        timer.elapsed()
+    );
+
+    timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&mut ferry2),
+        timer.elapsed()
+    );
 }
 
 #[cfg(test)]
