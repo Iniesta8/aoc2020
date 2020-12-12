@@ -6,9 +6,7 @@ fn parse(input: &str) -> Vec<Instruction> {
         .lines()
         .map(|line| {
             let (action, value) = line.split_at(1);
-            let value = value
-                .parse::<i32>()
-                .expect("syntax error: value not a number");
+            let value = value.parse().expect("value not a number");
 
             match action {
                 "N" => Instruction::North(value),
@@ -18,7 +16,7 @@ fn parse(input: &str) -> Vec<Instruction> {
                 "L" => Instruction::Left(value),
                 "R" => Instruction::Right(value),
                 "F" => Instruction::Forward(value),
-                _ => panic!("unknown action"),
+                _ => panic!("unknown action: {}", action),
             }
         })
         .collect()
@@ -35,20 +33,18 @@ enum Instruction {
     Forward(i32),
 }
 
-type Direction = (i32, i32);
-
 #[derive(Clone, Debug)]
 struct Ferry {
-    facing: i32,
     position: (i32, i32),
+    facing: i32, // 0: North, 90: East, 180: South, 270: West
     waypoint: (i32, i32),
 }
 
 impl Ferry {
     fn new() -> Self {
         Self {
-            facing: 90, // Direction::East,
             position: (0, 0),
+            facing: 90,
             waypoint: (10, 1),
         }
     }
@@ -57,20 +53,13 @@ impl Ferry {
         self.position.0.abs() + self.position.1.abs()
     }
 
-    fn drift(&mut self, dir: Direction, dist: i32) {
-        self.position = (
-            self.position.0 + dir.0 * dist,
-            self.position.1 + dir.1 * dist,
-        );
-    }
-
     fn move_forward(&mut self, dist: i32) {
         match self.facing {
             0 => self.position.1 += dist,
             90 => self.position.0 += dist,
             180 => self.position.1 -= dist,
             270 => self.position.0 -= dist,
-            _ => panic!("unknown current facing {}", self.facing),
+            _ => panic!("unknown current facing: {}", self.facing),
         }
     }
 
@@ -79,28 +68,16 @@ impl Ferry {
     }
 
     fn process_instructions_immediate(&mut self, instructions: &Vec<Instruction>) {
-        for instr in instructions {
+        for &instr in instructions {
             match instr {
-                Instruction::North(dist) => self.drift((0, 1), *dist),
-                Instruction::South(dist) => self.drift((0, -1), *dist),
-                Instruction::East(dist) => self.drift((1, 0), *dist),
-                Instruction::West(dist) => self.drift((-1, 0), *dist),
-                Instruction::Left(degrees) => self.turn(-(*degrees)),
-                Instruction::Right(degrees) => self.turn(*degrees),
-                Instruction::Forward(dist) => self.move_forward(*dist),
+                Instruction::North(dist) => self.position.1 += dist,
+                Instruction::South(dist) => self.position.1 -= dist,
+                Instruction::East(dist) => self.position.0 += dist,
+                Instruction::West(dist) => self.position.0 -= dist,
+                Instruction::Left(degrees) => self.turn(-degrees),
+                Instruction::Right(degrees) => self.turn(degrees),
+                Instruction::Forward(dist) => self.move_forward(dist),
             }
-        }
-    }
-
-    fn update_waypoint(&mut self, instr: Instruction) {
-        match instr {
-            Instruction::North(value) => self.waypoint.1 += value,
-            Instruction::South(value) => self.waypoint.1 -= value,
-            Instruction::East(value) => self.waypoint.0 += value,
-            Instruction::West(value) => self.waypoint.0 -= value,
-            Instruction::Left(degrees) => self.rotate_waypoint(-degrees),
-            Instruction::Right(degrees) => self.rotate_waypoint(degrees),
-            _ => panic!("unknown waypoint instruction {:?}", instr),
         }
     }
 
@@ -115,14 +92,19 @@ impl Ferry {
 
     fn move_towards_waypoint(&mut self, times: i32) {
         self.position.0 += times * self.waypoint.0;
-        self.position.1 += times * self.waypoint.1
+        self.position.1 += times * self.waypoint.1;
     }
 
     fn process_instructions_relative(&mut self, instructions: &Vec<Instruction>) {
-        for inst in instructions {
-            match inst {
-                Instruction::Forward(times) => self.move_towards_waypoint(*times),
-                _ => self.update_waypoint(*inst),
+        for &instr in instructions {
+            match instr {
+                Instruction::North(value) => self.waypoint.1 += value,
+                Instruction::South(value) => self.waypoint.1 -= value,
+                Instruction::East(value) => self.waypoint.0 += value,
+                Instruction::West(value) => self.waypoint.0 -= value,
+                Instruction::Left(degrees) => self.rotate_waypoint(-degrees),
+                Instruction::Right(degrees) => self.rotate_waypoint(degrees),
+                Instruction::Forward(times) => self.move_towards_waypoint(times),
             }
         }
     }
