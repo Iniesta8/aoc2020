@@ -45,7 +45,9 @@ impl Solution {
             .map(|&(i, bus_id)| (-(i as isize), bus_id as isize))
             .unzip();
 
-        chinese_remainder_theorem(&u, &m).unwrap() as usize
+        chinese_remainder_theorem(&u, &m)
+            .unwrap()
+            .rem_euclid(m.iter().product::<isize>()) as usize
     }
 }
 
@@ -72,12 +74,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() {
-        let input = "\
-939
-7,13,x,x,59,x,31,19";
-        let notes = parse(&input);
-        assert_eq!(Solution::part1(&notes), 295);
-        assert_eq!(Solution::part2(&notes), 1068781);
+    fn test_day13_part1() {
+        assert_eq!(Solution::part1(&parse(&"939\n7,13,x,x,59,x,31,19")), 295);
+    }
+
+    #[test]
+    fn test_day13_part2() {
+        assert_eq!(Solution::part2(&parse(&"0\n7,13,x,x,59,x,31,19")), 1068781);
+        assert_eq!(Solution::part2(&parse(&"0\n17,x,13,19")), 3417);
+        assert_eq!(Solution::part2(&parse(&"0\n67,7,59,61")), 754018);
+        assert_eq!(Solution::part2(&parse(&"0\n67,x,7,59,61")), 779210);
+        assert_eq!(Solution::part2(&parse(&"0\n67,7,x,59,61")), 1261476);
+        assert_eq!(Solution::part2(&parse(&"0\n1789,37,47,1889")), 1202161486);
     }
 }
