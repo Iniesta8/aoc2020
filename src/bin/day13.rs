@@ -1,18 +1,14 @@
 use std::fs;
 use std::time::Instant;
 
+use ring_algorithm::chinese_remainder_theorem;
+
 type Notes = (usize, Vec<(usize, usize)>);
 
 fn parse(input: &str) -> Notes {
     let mut lines = input.split('\n');
-
-    let earliest = lines
-        .next()
-        .unwrap()
-        .parse::<usize>()
-        .expect("Given timestamp not a number");
-
-    let intervals: Vec<_> = lines
+    let earliest = lines.next().unwrap().parse::<usize>().unwrap();
+    let buses: Vec<_> = lines
         .next()
         .unwrap()
         .split(',')
@@ -21,14 +17,11 @@ fn parse(input: &str) -> Notes {
         .map(|(i, c)| (i, c.parse::<usize>().unwrap()))
         .collect();
 
-    (earliest, intervals)
+    (earliest, buses)
 }
 
-fn find_next_departures(
-    earliest: usize,
-    intervals: &[(usize, usize)],
-) -> Vec<(usize, usize, usize)> {
-    intervals
+fn find_next_departures(earliest: usize, buses: &[(usize, usize)]) -> Vec<(usize, usize, usize)> {
+    buses
         .iter()
         .map(|&(offset, int)| (int, offset, (earliest / int) * int + int))
         .collect()
@@ -38,26 +31,21 @@ struct Solution;
 
 impl Solution {
     fn part1(notes: &Notes) -> usize {
-        let (earliest, intervals) = notes;
-        let next_departures = find_next_departures(*earliest, intervals);
-        let (bus_id, _, departure) = next_departures.iter().min_by_key(|&(_, _, ts)| ts).unwrap();
+        let (earliest, buses) = notes;
+        let next_departures = find_next_departures(*earliest, buses);
+        let (id, _, departure) = next_departures.iter().min_by_key(|&(_, _, ts)| ts).unwrap();
 
-        bus_id * (departure - earliest)
+        id * (departure - earliest)
     }
 
     fn part2(notes: &Notes) -> usize {
-        let mut t = 0;
-        let intervals = notes.1.clone();
+        let (u, m): (Vec<_>, Vec<_>) = notes
+            .1 //intervals
+            .iter()
+            .map(|&(i, bus_id)| (-(i as isize), bus_id as isize))
+            .unzip();
 
-        loop {
-            if find_next_departures(t, &intervals[1..])
-                .iter()
-                .all(|(_, offset, next_dep)| (t + offset) == *next_dep)
-            {
-                return t;
-            }
-            t += intervals[0].1;
-        }
+        chinese_remainder_theorem(&u, &m).unwrap() as usize
     }
 }
 
@@ -71,7 +59,6 @@ fn main() {
         Solution::part1(&notes),
         timer.elapsed()
     );
-
     let timer = Instant::now();
     println!(
         "p2: {} (runtime: {:?})",
@@ -90,7 +77,6 @@ mod tests {
 939
 7,13,x,x,59,x,31,19";
         let notes = parse(&input);
-
         assert_eq!(Solution::part1(&notes), 295);
         assert_eq!(Solution::part2(&notes), 1068781);
     }
