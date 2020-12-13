@@ -75,7 +75,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_solution() {
+    fn test_day09() {
         let input = "\
 35
 20

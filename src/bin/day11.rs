@@ -148,7 +148,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_solution() {
+    fn test_day11() {
         let input1 = "\
 L.LL.LL.LL
 LLLLLLL.LL

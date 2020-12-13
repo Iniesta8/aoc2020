@@ -151,7 +151,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() {
+    fn test_day12_part1() {
         let input = "\
 F10
 N3
@@ -163,7 +163,7 @@ F11";
     }
 
     #[test]
-    fn test_part2() {
+    fn test_day12_part2() {
         let input = "\
 F10
 N3

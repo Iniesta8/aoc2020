@@ -160,7 +160,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_console() {
+    fn test_day08() {
         let mut console1 = GameConsole::from_program(
             "\
 nop +0

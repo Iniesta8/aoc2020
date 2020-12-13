@@ -79,7 +79,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_part1() {
+    fn test_day07_part1() {
         let bags = parse(
             "\
 light red bags contain 1 bright white bag, 2 muted yellow bags.
@@ -96,7 +96,7 @@ dotted black bags contain no other bags.",
     }
 
     #[test]
-    fn test_part2() {
+    fn test_day07_part2() {
         let bags = parse(
             "\
 shiny gold bags contain 2 dark red bags.

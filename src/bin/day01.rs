@@ -57,7 +57,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_find_sum_pair() {
+    fn test_day01_find_sum_pair() {
         assert_eq!(
             Solution::find_sum_pair(&vec![1721, 979, 366, 299, 675, 1456], 2020),
             Some((1721, 299))
@@ -65,7 +65,7 @@ mod tests {
     }
 
     #[test]
-    fn test_find_sum_triple() {
+    fn test_day01_find_sum_triple() {
         assert_eq!(
             Solution::find_sum_triple(&vec![1721, 979, 366, 299, 675, 1456], 2020),
             Some((366, 675, 979))

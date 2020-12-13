@@ -40,7 +40,7 @@ impl Solution {
 
     fn part2(notes: &Notes) -> usize {
         let (u, m): (Vec<_>, Vec<_>) = notes
-            .1 //intervals
+            .1
             .iter()
             .map(|&(i, bus_id)| (-(i as isize), bus_id as isize))
             .unzip();
