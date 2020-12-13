@@ -1,41 +1,63 @@
 use std::fs;
 use std::time::Instant;
 
-fn parse(input: &str) -> (usize, Vec<usize>) {
+type Notes = (usize, Vec<(usize, usize)>);
+
+fn parse(input: &str) -> Notes {
     let mut lines = input.split('\n');
 
-    let earliest_depart = lines
+    let earliest = lines
         .next()
         .unwrap()
         .parse::<usize>()
         .expect("Given timestamp not a number");
 
-    let intervals = lines
+    let intervals: Vec<_> = lines
         .next()
         .unwrap()
         .split(',')
-        .filter_map(|c| c.parse::<usize>().ok())
+        .enumerate()
+        .filter(|&(_, s)| s != "x")
+        .map(|(i, c)| (i, c.parse::<usize>().unwrap()))
         .collect();
 
-    (earliest_depart, intervals)
+    (earliest, intervals)
 }
 
-fn find_next_departures(earliest_depart: usize, intervals: &[usize]) -> Vec<(usize, usize)> {
+fn find_next_departures(
+    earliest: usize,
+    intervals: &[(usize, usize)],
+) -> Vec<(usize, usize, usize)> {
     intervals
         .iter()
-        .map(|&int| (int, (earliest_depart / int) * int + int))
+        .map(|&(offset, int)| (int, offset, (earliest / int) * int + int))
         .collect()
 }
 
 struct Solution;
 
 impl Solution {
-    fn part1(notes: &(usize, Vec<usize>)) -> usize {
-        let (earliest_depart, intervals) = notes;
-        let next_departures = find_next_departures(*earliest_depart, &intervals);
-        let (bus_id, departure) = next_departures.iter().min_by_key(|&(_, ts)| ts).unwrap();
+    fn part1(notes: &Notes) -> usize {
+        let (earliest, intervals) = notes;
+        let next_departures = find_next_departures(*earliest, intervals);
+        let (bus_id, _, departure) = next_departures.iter().min_by_key(|&(_, _, ts)| ts).unwrap();
 
-        bus_id * (departure - earliest_depart)
+        bus_id * (departure - earliest)
+    }
+
+    fn part2(notes: &Notes) -> usize {
+        let mut t = 0;
+        let intervals = notes.1.clone();
+
+        loop {
+            if find_next_departures(t, &intervals[1..])
+                .iter()
+                .all(|(_, offset, next_dep)| (t + offset) == *next_dep)
+            {
+                return t;
+            }
+            t += intervals[0].1;
+        }
     }
 }
 
@@ -47,6 +69,13 @@ fn main() {
     println!(
         "p1: {} (runtime: {:?})",
         Solution::part1(&notes),
+        timer.elapsed()
+    );
+
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&notes),
         timer.elapsed()
     );
 }
@@ -63,5 +92,6 @@ mod tests {
         let notes = parse(&input);
 
         assert_eq!(Solution::part1(&notes), 295);
+        assert_eq!(Solution::part2(&notes), 1068781);
     }
 }
