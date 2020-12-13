@@ -49,6 +49,19 @@ impl Solution {
             .unwrap()
             .rem_euclid(m.iter().product::<isize>()) as usize
     }
+
+    fn part2_alt(notes: &Notes) -> usize {
+        let mut running_product = 1;
+        let mut ans = 0;
+
+        for &(i, int) in notes.1.iter() {
+            while (ans + i) % int != 0 {
+                ans += running_product;
+            }
+            running_product *= int;
+        }
+        ans
+    }
 }
 
 fn main() {
@@ -65,6 +78,13 @@ fn main() {
     println!(
         "p2: {} (runtime: {:?})",
         Solution::part2(&notes),
+        timer.elapsed()
+    );
+
+    let timer = Instant::now();
+    println!(
+        "p2 (alternative): {} (runtime: {:?})",
+        Solution::part2_alt(&notes),
         timer.elapsed()
     );
 }
@@ -86,5 +106,10 @@ mod tests {
         assert_eq!(Solution::part2(&parse(&"0\n67,x,7,59,61")), 779210);
         assert_eq!(Solution::part2(&parse(&"0\n67,7,x,59,61")), 1261476);
         assert_eq!(Solution::part2(&parse(&"0\n1789,37,47,1889")), 1202161486);
+
+        assert_eq!(
+            Solution::part2_alt(&parse(&"0\n7,13,x,x,59,x,31,19")),
+            1068781
+        );
     }
 }
