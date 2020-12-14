@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
 
@@ -26,9 +27,9 @@ fn parse(input: &str) -> Vec<Instruction> {
 }
 
 // Returns two bitmasks: (AND-mask, OR-mask)
-// AND-mask to set 0's
+// AND-mask to set 0's (clear 1's)
 // OR-mask to set 1's
-fn create_masks(raw_mask: &String) -> (usize, usize) {
+fn create_masks_v1(raw_mask: &String) -> (usize, usize) {
     raw_mask
         .chars()
         .rev()
@@ -41,36 +42,65 @@ fn create_masks(raw_mask: &String) -> (usize, usize) {
         })
 }
 
-fn write_to_mem(mem: &mut Vec<usize>, address: usize, mask: &String, new_value: usize) {
-    let mem_size = mem.len();
+fn calculate_dest_addresses(raw_mask: &String, raw_address: usize) -> Vec<usize> {
+    let mut res = vec![];
+    let len = raw_mask.chars().filter(|&c| c == 'X').count();
 
-    if address >= mem_size {
-        let mut new_mem = vec![0; address - mem_size + 1];
-        mem.append(&mut new_mem);
+    for mut i in 0..(1 << len) {
+        let mut tmp_mask = raw_mask
+            .chars()
+            .zip(format!("{:036b}", raw_address).chars())
+            .map(|(a, b)| match (a, b) {
+                ('X', _) => 'X',
+                ('1', _) => '1',
+                ('0', val) => val,
+                _ => panic!("given bitmask not supported!"),
+            })
+            .collect::<String>();
+
+        for _ in 0..len {
+            tmp_mask = tmp_mask.replacen('X', &format!("{}", i & 1), 1);
+            i >>= 1;
+        }
+        res.push(usize::from_str_radix(&tmp_mask, 2).unwrap());
     }
-
-    let (and, or) = create_masks(&mask);
-
-    let mut val_to_write = new_value;
-    val_to_write &= and;
-    val_to_write |= or;
-
-    mem[address] = val_to_write;
+    res
 }
 
-fn process(mut memory: &mut Vec<usize>, instructions: &Vec<Instruction>) {
+fn write_to_mem(
+    version: usize,
+    mem: &mut HashMap<usize, usize>,
+    address: usize,
+    mask: &String,
+    new_value: usize,
+) {
+    match version {
+        1 => {
+            let (and, or) = create_masks_v1(&mask);
+            mem.insert(address, (new_value & and) | or);
+        }
+        2 => {
+            for dest_address in calculate_dest_addresses(&mask, address) {
+                mem.insert(dest_address, new_value);
+            }
+        }
+        _ => (),
+    }
+}
+
+fn process(
+    version: usize,
+    mut memory: &mut HashMap<usize, usize>,
+    instructions: &Vec<Instruction>,
+) {
     let mut mask = String::from("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-
-    // dbg!(&instructions);
-
     for inst in instructions.iter() {
-        // dbg!(&memory);
         match inst {
             Instruction::Mask(new_mask) => {
                 mask = new_mask.clone();
             }
             Instruction::Write(address, new_value) => {
-                write_to_mem(&mut memory, *address, &mask, *new_value)
+                write_to_mem(version, &mut memory, *address, &mask, *new_value)
             }
         }
     }
@@ -80,9 +110,15 @@ struct Solution;
 
 impl Solution {
     fn part1(instructions: &Vec<Instruction>) -> usize {
-        let mut memory = vec![0];
-        process(&mut memory, &instructions);
-        memory.iter().sum()
+        let mut memory = HashMap::new();
+        process(1, &mut memory, &instructions);
+        memory.values().sum()
+    }
+
+    fn part2(instructions: &Vec<Instruction>) -> usize {
+        let mut memory = HashMap::new();
+        process(2, &mut memory, &instructions);
+        memory.values().sum()
     }
 }
 
@@ -96,12 +132,12 @@ fn main() {
         Solution::part1(&instructions),
         timer.elapsed()
     );
-    // let timer = Instant::now();
-    // println!(
-    // "p2: {} (runtime: {:?})",
-    // Solution::part2(&notes),
-    // timer.elapsed()
-    // );
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&instructions),
+        timer.elapsed()
+    );
 }
 
 #[cfg(test)]
@@ -118,18 +154,13 @@ mem[8] = 0";
         assert_eq!(Solution::part1(&parse(&input)), 165);
     }
 
-    // #[test]
-    // fn test_day13_part2() {
-    // assert_eq!(Solution::part2(&parse(&"0\n7,13,x,x,59,x,31,19")), 1068781);
-    // assert_eq!(Solution::part2(&parse(&"0\n17,x,13,19")), 3417);
-    // assert_eq!(Solution::part2(&parse(&"0\n67,7,59,61")), 754018);
-    // assert_eq!(Solution::part2(&parse(&"0\n67,x,7,59,61")), 779210);
-    // assert_eq!(Solution::part2(&parse(&"0\n67,7,x,59,61")), 1261476);
-    // assert_eq!(Solution::part2(&parse(&"0\n1789,37,47,1889")), 1202161486);
-    //
-    // assert_eq!(
-    // Solution::part2_alt(&parse(&"0\n7,13,x,x,59,x,31,19")),
-    // 1068781
-    // );
-    // }
+    #[test]
+    fn test_day14_part2() {
+        let input = "\
+mask = 000000000000000000000000000000X1001X
+mem[42] = 100
+mask = 00000000000000000000000000000000X0XX
+mem[26] = 1";
+        assert_eq!(Solution::part2(&parse(&input)), 208);
+    }
 }
