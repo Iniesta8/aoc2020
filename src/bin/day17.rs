@@ -98,58 +98,62 @@ fn get_neighbors_4d(
     neighbors
 }
 
+fn calc_new_cube_state(state: CubeState, num_active_neighbors: usize) -> CubeState {
+    match state {
+        CubeState::Active if num_active_neighbors == 2 || num_active_neighbors == 3 => {
+            CubeState::Active
+        }
+        CubeState::Active => CubeState::Inactive,
+        CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
+        CubeState::Inactive => CubeState::Inactive,
+    }
+}
+
+fn process_cube<P, F>(
+    cur_cubes: &HashMap<P, CubeState>,
+    new_cubes: &mut HashMap<P, CubeState>,
+    cube: (&P, &CubeState),
+    get_neighbors: F,
+) -> HashMap<P, CubeState>
+where
+    F: Fn(&HashMap<P, CubeState>, &P) -> HashMap<P, CubeState> + Copy,
+    P: Copy + Hash + Eq,
+{
+    let (cube_pos, cur_cube_state) = cube;
+    let neighbors = get_neighbors(&cur_cubes, &cube_pos);
+    let num_active_neighbors = neighbors
+        .iter()
+        .filter(|(_, &state)| state == CubeState::Active)
+        .count();
+
+    new_cubes.insert(
+        *cube_pos,
+        calc_new_cube_state(*cur_cube_state, num_active_neighbors),
+    );
+
+    neighbors
+}
+
 fn conway<P, F>(cubes: &HashMap<P, CubeState>, get_neighbors: F, cycles: usize) -> usize
 where
     F: Fn(&HashMap<P, CubeState>, &P) -> HashMap<P, CubeState> + Copy,
-    P: Clone + Copy + Hash + Eq,
+    P: Copy + Hash + Eq,
 {
     let mut cur_cubes = cubes.clone();
 
     for _ in 0..cycles {
         let mut new_cubes = HashMap::new();
         for cube in cur_cubes.iter() {
-            let (cube_pos, cube_state) = cube;
-            let neighbors = get_neighbors(&cur_cubes, cube_pos);
-            let num_active_neighbors = neighbors
-                .iter()
-                .filter(|(_, &state)| state == CubeState::Active)
-                .count();
-
-            new_cubes.insert(
-                *cube_pos,
-                match cube_state {
-                    CubeState::Active if num_active_neighbors == 2 || num_active_neighbors == 3 => {
-                        CubeState::Active
-                    }
-                    CubeState::Active => CubeState::Inactive,
-                    CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
-                    CubeState::Inactive => CubeState::Inactive,
-                },
-            );
+            let neighbors = process_cube(&cur_cubes, &mut new_cubes, cube, get_neighbors);
             let extended_cubes: HashMap<_, CubeState> = neighbors
                 .into_iter()
                 .filter(|cube| !cur_cubes.contains_key(&cube.0))
                 .collect();
 
             for ext_cube in extended_cubes.iter() {
-                let (ext_cube_pos, ext_cube_state) = ext_cube;
-                let neighbors = get_neighbors(&cur_cubes, ext_cube_pos);
-                let num_active_neighbors = neighbors
-                    .iter()
-                    .filter(|(_, &state)| state == CubeState::Active)
-                    .count();
-
-                new_cubes.insert(
-                    *ext_cube_pos,
-                    match ext_cube_state {
-                        CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
-                        CubeState::Inactive => CubeState::Inactive,
-                        _ => unreachable!(),
-                    },
-                );
+                process_cube(&cur_cubes, &mut new_cubes, ext_cube, get_neighbors);
             }
         }
-
         cur_cubes = new_cubes.clone();
     }
     cur_cubes
