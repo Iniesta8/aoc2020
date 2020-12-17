@@ -69,7 +69,7 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
     let mut cur_cubes = cubes.clone();
 
     for _ in 0..cycles {
-        let mut new_cubes = HashMap::new();
+        let mut new_cubes: HashMap<(i32, i32, i32), CubeState> = HashMap::new();
         for cube in cur_cubes.iter() {
             let (cube_pos, cube_state) = cube;
             let neighbors = get_neighbors(&cur_cubes, cube_pos);
@@ -83,7 +83,7 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
                 .iter()
                 .filter(|cube| !cur_cubes.contains_key(cube.0))
             {
-                new_cubes.insert(inactive_neighbor.0, inactive_neighbor.1);
+                new_cubes.insert(*inactive_neighbor.0, *inactive_neighbor.1);
             }
 
             let (new_cube_pos, new_cube_state) = match cube_state {
@@ -97,10 +97,10 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
                 CubeState::Inactive => (cube_pos, CubeState::Inactive),
             };
 
-            new_cubes.insert(new_cube_pos, &new_cube_state);
+            new_cubes.insert(*new_cube_pos, new_cube_state);
         }
 
-        cur_cubes = *new_cubes.iter().copied().collect();
+        cur_cubes = new_cubes.clone();
     }
 
     cur_cubes
