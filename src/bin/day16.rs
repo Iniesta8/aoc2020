@@ -79,19 +79,17 @@ struct Solution;
 
 impl Solution {
     fn part1(notes: &TicketNotes) -> usize {
-        let valid_ranges: Vec<RangeInclusive<usize>> = notes
+        let valid_ranges: Vec<&RangeInclusive<usize>> = notes
             .ticket_fields
             .iter()
-            .map(|tf| tf.valid_ranges.clone())
-            .flatten()
+            .flat_map(|tf| &tf.valid_ranges)
             .collect();
 
         notes
             .nearby_tickets
             .iter()
-            .cloned()
             .flatten()
-            .filter(|val| !valid_ranges.iter().cloned().any(|vr| vr.contains(val)))
+            .filter(|val| !valid_ranges.iter().any(|vr| vr.contains(val)))
             .sum()
     }
 }
