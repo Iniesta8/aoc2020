@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::fs;
+use std::hash::Hash;
 use std::time::Instant;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -28,7 +29,7 @@ fn parse(input: &str) -> HashMap<(i32, i32, i32), CubeState> {
     cubes
 }
 
-fn get_neighbors(
+fn get_neighbors_3d(
     cubes: &HashMap<(i32, i32, i32), CubeState>,
     cube_pos: &(i32, i32, i32),
 ) -> HashMap<(i32, i32, i32), CubeState> {
@@ -67,25 +68,52 @@ fn get_neighbors(
     neighbors
 }
 
-fn count_cubes_by_state(
-    cubes: &HashMap<(i32, i32, i32), CubeState>,
-    state_to_count: CubeState,
-) -> usize {
-    cubes
-        .iter()
-        .filter(|(_, &state)| state == state_to_count)
-        .count()
+fn get_neighbors_4d(
+    cubes: &HashMap<(i32, i32, i32, i32), CubeState>,
+    cube_pos: &(i32, i32, i32, i32),
+) -> HashMap<(i32, i32, i32, i32), CubeState> {
+    let mut neighbors = HashMap::new();
+    let (x, y, z, w) = cube_pos;
+
+    for xi in -1..=1 {
+        for yi in -1..=1 {
+            for zi in -1..=1 {
+                for wi in -1..=1 {
+                    if xi == 0 && yi == 0 && zi == 0 && wi == 0 {
+                        continue;
+                    }
+                    let neighbor = (x + xi, y + yi, z + zi, w + wi);
+                    neighbors.insert(neighbor, {
+                        match cubes.get(&neighbor) {
+                            None => CubeState::Inactive,
+                            Some(&state) => state,
+                        }
+                    });
+                }
+            }
+        }
+    }
+
+    assert_eq!(neighbors.len(), 80);
+    neighbors
 }
 
-fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
+fn conway<P, F>(cubes: &HashMap<P, CubeState>, get_neighbors: F, cycles: usize) -> usize
+where
+    F: Fn(&HashMap<P, CubeState>, &P) -> HashMap<P, CubeState> + Copy,
+    P: Clone + Copy + Hash + Eq,
+{
     let mut cur_cubes = cubes.clone();
 
     for _ in 0..cycles {
-        let mut new_cubes: HashMap<(i32, i32, i32), CubeState> = HashMap::new();
+        let mut new_cubes = HashMap::new();
         for cube in cur_cubes.iter() {
             let (cube_pos, cube_state) = cube;
             let neighbors = get_neighbors(&cur_cubes, cube_pos);
-            let num_active_neighbors = count_cubes_by_state(&neighbors, CubeState::Active);
+            let num_active_neighbors = neighbors
+                .iter()
+                .filter(|(_, &state)| state == CubeState::Active)
+                .count();
 
             new_cubes.insert(
                 *cube_pos,
@@ -98,7 +126,7 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
                     CubeState::Inactive => CubeState::Inactive,
                 },
             );
-            let extended_cubes: HashMap<(i32, i32, i32), CubeState> = neighbors
+            let extended_cubes: HashMap<_, CubeState> = neighbors
                 .into_iter()
                 .filter(|cube| !cur_cubes.contains_key(&cube.0))
                 .collect();
@@ -106,19 +134,17 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
             for ext_cube in extended_cubes.iter() {
                 let (ext_cube_pos, ext_cube_state) = ext_cube;
                 let neighbors = get_neighbors(&cur_cubes, ext_cube_pos);
-                let num_active_neighbors = count_cubes_by_state(&neighbors, CubeState::Active);
+                let num_active_neighbors = neighbors
+                    .iter()
+                    .filter(|(_, &state)| state == CubeState::Active)
+                    .count();
 
                 new_cubes.insert(
                     *ext_cube_pos,
                     match ext_cube_state {
-                        CubeState::Active
-                            if num_active_neighbors == 2 || num_active_neighbors == 3 =>
-                        {
-                            CubeState::Active
-                        }
-                        CubeState::Active => CubeState::Inactive,
                         CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
                         CubeState::Inactive => CubeState::Inactive,
+                        _ => unreachable!(),
                     },
                 );
             }
@@ -136,26 +162,36 @@ struct Solution;
 
 impl Solution {
     fn part1(cubes: &HashMap<(i32, i32, i32), CubeState>) -> usize {
-        conway(&cubes, 6)
+        conway(&cubes, get_neighbors_3d, 6)
+    }
+
+    fn part2(cubes: &HashMap<(i32, i32, i32, i32), CubeState>) -> usize {
+        conway(&cubes, get_neighbors_4d, 6)
     }
 }
 
 fn main() {
     let input = fs::read_to_string("./input/day17.txt").expect("File not found!");
-    let cubes = parse(&input);
+    let cubes_3d = parse(&input);
 
     let timer = Instant::now();
     println!(
         "p1: {} (runtime: {:?})",
-        Solution::part1(&cubes),
+        Solution::part1(&cubes_3d),
         timer.elapsed()
     );
-    // let timer = Instant::now();
-    // println!(
-    // "p2: {} (runtime: {:?})",
-    // Solution::solve(&starting_numbers, 30_000_000),
-    // timer.elapsed()
-    // );
+
+    let cubes_4d = cubes_3d
+        .iter()
+        .map(|(&(x, y, z), &state)| ((x, y, z, 0), state))
+        .collect();
+
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&cubes_4d),
+        timer.elapsed()
+    );
 }
 
 #[cfg(test)]
@@ -168,6 +204,14 @@ mod tests {
 .#.
 ..#
 ###";
-        assert_eq!(Solution::part1(&parse(&input)), 112);
+        let cubes_3d = parse(&input);
+        assert_eq!(Solution::part1(&cubes_3d), 112);
+
+        let cubes_4d = cubes_3d
+            .iter()
+            .map(|(&(x, y, z), &state)| ((x, y, z, 0), state))
+            .collect();
+
+        assert_eq!(Solution::part2(&cubes_4d), 848);
     }
 }
