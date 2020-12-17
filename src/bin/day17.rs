@@ -116,7 +116,7 @@ fn process_cube<P, F>(
     get_neighbors: F,
 ) -> HashMap<P, CubeState>
 where
-    F: Fn(&HashMap<P, CubeState>, &P) -> HashMap<P, CubeState> + Copy,
+    F: Fn(&HashMap<P, CubeState>, &P) -> HashMap<P, CubeState>,
     P: Copy + Hash + Eq,
 {
     let (cube_pos, cur_cube_state) = cube;
@@ -126,10 +126,11 @@ where
         .filter(|(_, &state)| state == CubeState::Active)
         .count();
 
-    new_cubes.insert(
-        *cube_pos,
-        calc_new_cube_state(*cur_cube_state, num_active_neighbors),
-    );
+    let new_cube_state = calc_new_cube_state(*cur_cube_state, num_active_neighbors);
+
+    if new_cube_state == CubeState::Active {
+        new_cubes.insert(*cube_pos, CubeState::Active);
+    }
 
     neighbors
 }
