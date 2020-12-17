@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum CubeState {
     Active,
     Inactive,
@@ -62,7 +62,19 @@ fn get_neighbors(
             });
         }
     }
+
+    assert_eq!(neighbors.len(), 26);
     neighbors
+}
+
+fn count_cubes_by_state(
+    cubes: &HashMap<(i32, i32, i32), CubeState>,
+    state_to_count: CubeState,
+) -> usize {
+    cubes
+        .iter()
+        .filter(|(_, &state)| state == state_to_count)
+        .count()
 }
 
 fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
@@ -73,36 +85,47 @@ fn conway(cubes: &HashMap<(i32, i32, i32), CubeState>, cycles: usize) -> usize {
         for cube in cur_cubes.iter() {
             let (cube_pos, cube_state) = cube;
             let neighbors = get_neighbors(&cur_cubes, cube_pos);
+            let num_active_neighbors = count_cubes_by_state(&neighbors, CubeState::Active);
 
-            let num_active_adj_cubes = neighbors
-                .iter()
-                .filter(|(_, &state)| state == CubeState::Active)
-                .count();
+            new_cubes.insert(
+                *cube_pos,
+                match cube_state {
+                    CubeState::Active if num_active_neighbors == 2 || num_active_neighbors == 3 => {
+                        CubeState::Active
+                    }
+                    CubeState::Active => CubeState::Inactive,
+                    CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
+                    CubeState::Inactive => CubeState::Inactive,
+                },
+            );
+            let extended_cubes: HashMap<(i32, i32, i32), CubeState> = neighbors
+                .into_iter()
+                .filter(|cube| !cur_cubes.contains_key(&cube.0))
+                .collect();
 
-            for inactive_neighbor in neighbors
-                .iter()
-                .filter(|cube| !cur_cubes.contains_key(cube.0))
-            {
-                new_cubes.insert(*inactive_neighbor.0, *inactive_neighbor.1);
+            for ext_cube in extended_cubes.iter() {
+                let (ext_cube_pos, ext_cube_state) = ext_cube;
+                let neighbors = get_neighbors(&cur_cubes, ext_cube_pos);
+                let num_active_neighbors = count_cubes_by_state(&neighbors, CubeState::Active);
+
+                new_cubes.insert(
+                    *ext_cube_pos,
+                    match ext_cube_state {
+                        CubeState::Active
+                            if num_active_neighbors == 2 || num_active_neighbors == 3 =>
+                        {
+                            CubeState::Active
+                        }
+                        CubeState::Active => CubeState::Inactive,
+                        CubeState::Inactive if num_active_neighbors == 3 => CubeState::Active,
+                        CubeState::Inactive => CubeState::Inactive,
+                    },
+                );
             }
-
-            let (new_cube_pos, new_cube_state) = match cube_state {
-                CubeState::Active if num_active_adj_cubes == 2 || num_active_adj_cubes == 3 => {
-                    (cube_pos, CubeState::Active)
-                }
-                CubeState::Active => (cube_pos, CubeState::Inactive),
-                CubeState::Inactive if num_active_adj_cubes == 2 || num_active_adj_cubes == 3 => {
-                    (cube_pos, CubeState::Active)
-                }
-                CubeState::Inactive => (cube_pos, CubeState::Inactive),
-            };
-
-            new_cubes.insert(*new_cube_pos, new_cube_state);
         }
 
         cur_cubes = new_cubes.clone();
     }
-
     cur_cubes
         .values()
         .filter(|&state| *state == CubeState::Active)
@@ -140,11 +163,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_day15_part1() {
+    fn test_day17_part1() {
         let input = "\
 .#.
 ..#
 ###";
-        assert_eq!(Solution::part1(&parse(&input)), 121);
+        assert_eq!(Solution::part1(&parse(&input)), 112);
     }
 }
