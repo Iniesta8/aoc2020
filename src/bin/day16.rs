@@ -1,48 +1,38 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use std::fs;
 use std::ops::RangeInclusive;
 use std::time::Instant;
-
-#[derive(Debug)]
-struct TicketField {
-    name: String,
-    valid_ranges: Vec<RangeInclusive<usize>>,
-}
 
 type Ticket = Vec<usize>;
 
 #[derive(Debug)]
 struct TicketNotes {
-    ticket_fields: Vec<TicketField>,
+    ticket_fields: HashMap<String, Vec<RangeInclusive<usize>>>,
     my_ticket: Ticket,
-    nearby_tickets: HashSet<Ticket>,
+    nearby_tickets: Vec<Ticket>,
 }
 
-fn parse_ticket_field(line: &str) -> TicketField {
+fn parse_ticket_field(line: &str) -> (String, Vec<RangeInclusive<usize>>) {
     let token: Vec<&str> = line.split(": ").collect();
     assert_eq!(token.len(), 2);
 
     let name = token[0];
     let range_elements: Vec<usize> = token[1]
         .split(|p| p == ' ' || p == '-')
-        .map(|s| s.parse::<usize>().ok())
-        .flatten()
+        .flat_map(str::parse)
         .collect();
     let valid_ranges: Vec<RangeInclusive<usize>> = range_elements
         .chunks(2)
-        .map(|chunk| RangeInclusive::new(chunk[0], chunk[1]))
+        .map(|chunk| chunk[0]..=chunk[1])
         .collect();
 
-    TicketField {
-        name: name.to_owned(),
-        valid_ranges,
-    }
+    (name.to_owned(), valid_ranges)
 }
 
 fn parse(input: &str) -> TicketNotes {
-    let mut ticket_fields = vec![];
+    let mut ticket_fields = HashMap::new();
     let mut my_ticket = vec![];
-    let mut nearby_tickets = HashSet::new();
+    let mut nearby_tickets = vec![];
     let mut block = "fields";
 
     for line in input.lines() {
@@ -58,13 +48,14 @@ fn parse(input: &str) -> TicketNotes {
             continue;
         }
         if block == "fields" {
-            ticket_fields.push(parse_ticket_field(line));
+            let (field_name, valid_ranges) = parse_ticket_field(line);
+            ticket_fields.insert(field_name, valid_ranges);
         } else {
-            let ticket: Ticket = line.trim().split(',').map(|f| f.parse().unwrap()).collect();
+            let ticket: Ticket = line.trim().split(',').flat_map(str::parse).collect();
             if block == "ticket" {
                 my_ticket = ticket;
             } else {
-                nearby_tickets.insert(ticket);
+                nearby_tickets.push(ticket);
             }
         }
     }
@@ -81,8 +72,8 @@ impl Solution {
     fn part1(notes: &TicketNotes) -> usize {
         let valid_ranges: Vec<&RangeInclusive<usize>> = notes
             .ticket_fields
-            .iter()
-            .flat_map(|tf| &tf.valid_ranges)
+            .values()
+            .flatten()
             .collect();
 
         notes
