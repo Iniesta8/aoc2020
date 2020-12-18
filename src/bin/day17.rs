@@ -204,7 +204,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_day17_part1() {
+    fn test_day17() {
         let input = "\
 .#.
 ..#
