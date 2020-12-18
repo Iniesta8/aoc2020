@@ -1,4 +1,4 @@
-use std::collections::{HashSet, HashMap};
+use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::ops::RangeInclusive;
 use std::time::Instant;
@@ -66,22 +66,89 @@ fn parse(input: &str) -> TicketNotes {
     }
 }
 
+fn get_valid_tickets(notes: &TicketNotes) -> Vec<Ticket> {
+    notes
+        .nearby_tickets
+        .iter()
+        .filter(|ticket| {
+            ticket.iter().all(|field| {
+                notes
+                    .ticket_fields
+                    .iter()
+                    .any(|(_, ranges)| ranges.iter().any(|range| range.contains(field)))
+            })
+        })
+        .cloned()
+        .collect()
+}
+
+fn find_possible_fields(notes: &TicketNotes, valid_tickets: &Vec<Ticket>) -> Vec<HashSet<String>> {
+    let mut possible_fields: Vec<HashSet<String>> =
+        vec![notes.ticket_fields.keys().cloned().collect(); notes.ticket_fields.len()];
+
+    for ticket in valid_tickets {
+        for i in 0..possible_fields.len() {
+            let value = ticket[i];
+            possible_fields[i] = possible_fields[i]
+                .iter()
+                .filter(|field| {
+                    notes
+                        .ticket_fields
+                        .get::<String>(field)
+                        .unwrap()
+                        .iter()
+                        .any(|range| range.contains(&value))
+                })
+                .cloned()
+                .collect();
+        }
+    }
+    possible_fields
+}
+
 struct Solution;
 
 impl Solution {
     fn part1(notes: &TicketNotes) -> usize {
-        let valid_ranges: Vec<&RangeInclusive<usize>> = notes
-            .ticket_fields
-            .values()
-            .flatten()
-            .collect();
-
         notes
             .nearby_tickets
             .iter()
             .flatten()
-            .filter(|val| !valid_ranges.iter().any(|vr| vr.contains(val)))
+            .filter(|val| {
+                !notes
+                    .ticket_fields
+                    .values()
+                    .flatten()
+                    .any(|vr| vr.contains(val))
+            })
             .sum()
+    }
+
+    fn part2(notes: &TicketNotes) -> usize {
+        let valid_tickets = get_valid_tickets(notes);
+        let possible_fields = find_possible_fields(notes, &valid_tickets);
+
+        let mut actual_fields = vec!["".to_owned(); possible_fields.len()];
+        for i in 1..=possible_fields.len() {
+            for (pos, field) in possible_fields
+                .iter()
+                .enumerate()
+                .filter(|(_, row_set)| row_set.len() == i)
+            {
+                for f in field {
+                    if !actual_fields.contains(f) {
+                        actual_fields[pos] = f.to_owned()
+                    }
+                }
+            }
+        }
+
+        actual_fields
+            .iter()
+            .enumerate()
+            .filter(|(_, field)| field.starts_with("departure"))
+            .map(|(i, _)| notes.my_ticket[i])
+            .product()
     }
 }
 
@@ -93,6 +160,13 @@ fn main() {
     println!(
         "p1: {} (runtime: {:?})",
         Solution::part1(&notes),
+        timer.elapsed()
+    );
+
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&notes),
         timer.elapsed()
     );
 }
