@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
@@ -118,6 +119,49 @@ fn message_valid(msg: &str, rules: &HashMap<usize, Rule>) -> bool {
     }
 }
 
+fn build_regex(rules: &HashMap<usize, Rule>, rule_to_eval: usize) -> String {
+    if rule_to_eval == 8 {
+        return format!("({}+)", build_regex(rules, 42));
+    }
+    if rule_to_eval == 11 {
+        return format!(
+            "(?P<X11>{}(?P&X11){}|{}{})",
+            build_regex(rules, 42),
+            build_regex(rules, 31),
+            build_regex(rules, 42),
+            build_regex(rules, 31)
+        );
+    }
+    if let Some(Rule::Char(c)) = rules.get(&rule_to_eval) {
+        return format!("({})", c);
+    }
+    match rules.get(&rule_to_eval) {
+        Some(Rule::Rules(inner)) => {
+            let mut s = "(".to_owned();
+            for r in inner {
+                s.push_str(&build_regex(rules, *r)[..]);
+            }
+            s.push_str(")");
+            s
+        }
+        Some(Rule::Or(subrules)) => {
+            let mut s = "(".to_owned();
+            let len = subrules.len() - 1;
+            for (i, subrule) in subrules.iter().enumerate() {
+                for r in subrule {
+                    s.push_str(&build_regex(rules, *r)[..]);
+                }
+                if i < len {
+                    s.push_str("|");
+                }
+            }
+            s.push_str(")");
+            s
+        }
+        _ => unreachable!(),
+    }
+}
+
 struct Solution;
 
 impl Solution {
@@ -127,17 +171,32 @@ impl Solution {
             .filter(|msg| message_valid(msg, rules))
             .count()
     }
+
+    fn part2(messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
+        let regex_string = format!("^{}$", build_regex(rules, 0));
+        let re = Regex::new(&regex_string[..]).unwrap();
+        messages.iter().filter(|msg| re.is_match(msg)).count()
+    }
 }
 
 fn main() {
-    let input = fs::read_to_string("./input/day19.txt").expect("File not found!");
-
-    let (rules, messages) = parse(&input);
+    let input1 = fs::read_to_string("./input/day19.txt").expect("File not found!");
+    let (rules, messages) = parse(&input1);
 
     let timer = Instant::now();
     println!(
         "p1: {} (runtime: {:?})",
         Solution::part1(&messages, &rules),
+        timer.elapsed()
+    );
+
+    let input2 = fs::read_to_string("./input/day19_2.txt").expect("File not found!");
+    let (rules, messages) = parse(&input2);
+
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&messages, &rules),
         timer.elapsed()
     );
 }
@@ -164,4 +223,58 @@ aaaabbb";
         let (rules, messages) = parse(&input);
         assert_eq!(Solution::part1(&messages, &rules), 2);
     }
+
+    // #[test]
+    // fn test_day19_part2() {
+    // let input = "\
+    // 42: 9 14 | 10 1
+    // 9: 14 27 | 1 26
+    // 10: 23 14 | 28 1
+    // 1: \"a\"
+    // 11: 42 31
+    // 5: 1 14 | 15 1
+    // 19: 14 1 | 14 14
+    // 12: 24 14 | 19 1
+    // 16: 15 1 | 14 14
+    // 31: 14 17 | 1 13
+    // 6: 14 14 | 1 14
+    // 2: 1 24 | 14 4
+    // 0: 8 11
+    // 13: 14 3 | 1 12
+    // 15: 1 | 14
+    // 17: 14 2 | 1 7
+    // 23: 25 1 | 22 14
+    // 28: 16 1
+    // 4: 1 1
+    // 20: 14 14 | 1 15
+    // 3: 5 14 | 16 1
+    // 27: 1 6 | 14 18
+    // 14: \"b\"
+    // 21: 14 1 | 1 14
+    // 25: 1 1 | 1 14
+    // 22: 14 14
+    // 8: 42
+    // 26: 14 22 | 1 20
+    // 18: 15 15
+    // 7: 14 5 | 1 21
+    // 24: 14 1
+    //
+    // abbbbbabbbaaaababbaabbbbabababbbabbbbbbabaaaa
+    // bbabbbbaabaabba
+    // babbbbaabbbbbabbbbbbaabaaabaaa
+    // aaabbbbbbaaaabaababaabababbabaaabbababababaaa
+    // bbbbbbbaaaabbbbaaabbabaaa
+    // bbbababbbbaaaaaaaabbababaaababaabab
+    // ababaaaaaabaaab
+    // ababaaaaabbbaba
+    // baabbaaaabbaaaababbaababb
+    // abbbbabbbbaaaababbbbbbaaaababb
+    // aaaaabbaabaaaaababaa
+    // aaaabbaaaabbaaa
+    // aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
+    // babaaabbbaaabaababbaabababaaab
+    // aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba";
+    // let (rules, messages) = parse(&input);
+    // assert_eq!(Solution::part2(&messages, &rules), 3);
+    // }
 }
