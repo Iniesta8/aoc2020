@@ -3,3 +3,5 @@
 **/*.rs.bk
 flamegraph*
 perf*
+/data
+/.vim

@@ -124,6 +124,27 @@ fn build_regex(rules: &HashMap<usize, Rule>, rule_to_eval: usize) -> String {
         return format!("({}+)", build_regex(rules, 42));
     }
     if rule_to_eval == 11 {
+        // let a = build_regex(rules, 42);
+        // let b = build_regex(rules, 31);
+        //
+        // let mut s = "(?:".to_owned();
+        //
+        // for i in 1..100 {
+        // s += &format!(
+        // "{{{}}}{{{}}}{{{}}}{{{}}}",
+        // a,
+        // i.to_string(),
+        // b,
+        // i.to_string()
+        // );
+        //
+        // if i < 100 - 1 {
+        // s += "|";
+        // }
+        // }
+        // s += ")";
+        // return s;
+
         return format!(
             "(?P<X11>{}(?P&X11){}|{}{})",
             build_regex(rules, 42),
@@ -139,9 +160,9 @@ fn build_regex(rules: &HashMap<usize, Rule>, rule_to_eval: usize) -> String {
         Some(Rule::Rules(inner)) => {
             let mut s = "(".to_owned();
             for r in inner {
-                s.push_str(&build_regex(rules, *r)[..]);
+                s += &build_regex(rules, *r);
             }
-            s.push_str(")");
+            s += ")";
             s
         }
         Some(Rule::Or(subrules)) => {
@@ -149,13 +170,13 @@ fn build_regex(rules: &HashMap<usize, Rule>, rule_to_eval: usize) -> String {
             let len = subrules.len() - 1;
             for (i, subrule) in subrules.iter().enumerate() {
                 for r in subrule {
-                    s.push_str(&build_regex(rules, *r)[..]);
+                    s += &build_regex(rules, *r);
                 }
                 if i < len {
-                    s.push_str("|");
+                    s += "|";
                 }
             }
-            s.push_str(")");
+            s += ")";
             s
         }
         _ => unreachable!(),
@@ -174,8 +195,12 @@ impl Solution {
 
     fn part2(messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
         let regex_string = format!("^{}$", build_regex(rules, 0));
-        let re = Regex::new(&regex_string[..]).unwrap();
-        messages.iter().filter(|msg| re.is_match(msg)).count()
+
+        println!("{}", regex_string);
+        0
+
+        // let re = Regex::new(&regex_string).unwrap();
+        // messages.iter().filter(|msg| re.is_match(msg)).count()
     }
 }
 
