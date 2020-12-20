@@ -1,4 +1,4 @@
-use regex::Regex;
+// use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
 use std::time::Instant;
@@ -193,10 +193,14 @@ impl Solution {
             .count()
     }
 
-    fn part2(messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
+    fn part2(_messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
         let regex_string = format!("^{}$", build_regex(rules, 0));
 
-        println!("{}", regex_string);
+        // println!("{}", regex_string);
+
+        // Writes generated regex to file to evaluate it with python
+        fs::write("./data/day19_2_regex.txt", regex_string).expect("Write to file failed!");
+
         0
 
         // let re = Regex::new(&regex_string).unwrap();
