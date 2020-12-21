@@ -24,7 +24,7 @@ fn parse_food(food_str: &str) -> Food {
     }
 }
 
-fn find_possible_allergens(food_list: &[Food]) -> HashMap<String, HashSet<String>> {
+fn find_possible_allergenic_ingredients(food_list: &[Food]) -> HashMap<String, HashSet<String>> {
     let mut possible_allergens: HashMap<String, HashSet<String>> = HashMap::new();
 
     for food in food_list.iter() {
@@ -50,11 +50,14 @@ fn find_possible_allergens(food_list: &[Food]) -> HashMap<String, HashSet<String
 
 fn count_ingredients_without_allergens(
     food_list: &[Food],
-    possible_allergens: &HashMap<String, HashSet<String>>,
+    possible_allergenic_ingredients: &HashMap<String, HashSet<String>>,
 ) -> usize {
     let mut sum = 0;
-    let ingredients_with_allergens: HashSet<String> =
-        possible_allergens.values().cloned().flatten().collect();
+    let ingredients_with_allergens: HashSet<String> = possible_allergenic_ingredients
+        .values()
+        .cloned()
+        .flatten()
+        .collect();
     for food in food_list.iter() {
         sum += food
             .ingredients
@@ -66,47 +69,51 @@ fn count_ingredients_without_allergens(
     sum
 }
 
+fn find_unique_allergenic_ingredients(
+    possible_allergenic_ingrediants: &mut HashMap<String, HashSet<String>>,
+) -> HashMap<String, String> {
+    let mut allergenic_ingrediants = HashMap::new();
+
+    while allergenic_ingrediants.len() != possible_allergenic_ingrediants.len() {
+        for (allergen, ingredients) in possible_allergenic_ingrediants.iter_mut() {
+            if allergenic_ingrediants.contains_key(allergen) {
+                continue;
+            }
+            if ingredients.len() == 1 {
+                allergenic_ingrediants
+                    .insert(allergen.clone(), ingredients.iter().next().unwrap().clone());
+                continue;
+            }
+            for found in allergenic_ingrediants.values() {
+                ingredients.remove(found);
+            }
+        }
+    }
+
+    allergenic_ingrediants
+}
+
 struct Solution;
 
 impl Solution {
     fn part1(food_list: &[Food]) -> usize {
-        let possible_allergens = find_possible_allergens(food_list);
+        let possible_allergens = find_possible_allergenic_ingredients(food_list);
         count_ingredients_without_allergens(&food_list, &possible_allergens)
     }
 
     fn part2(food_list: &[Food]) -> String {
-        let mut found_allergens: HashMap<String, String> = HashMap::new();
+        let mut possible_allergenic_ingredients = find_possible_allergenic_ingredients(food_list);
+        let allergenic_ingrediants =
+            find_unique_allergenic_ingredients(&mut possible_allergenic_ingredients);
 
-        let mut possible_allergens = find_possible_allergens(food_list);
-
-        while found_allergens.len() != possible_allergens.len() {
-            for (allergen, ingredients) in possible_allergens.iter_mut() {
-                if found_allergens.contains_key(allergen) {
-                    continue;
-                }
-                if ingredients.len() == 1 {
-                    found_allergens
-                        .insert(allergen.clone(), ingredients.iter().next().unwrap().clone());
-                    continue;
-                }
-                for found in found_allergens.values() {
-                    ingredients.remove(found);
-                }
-            }
-        }
-
-        let mut allergen_list: Vec<String> = found_allergens.keys().cloned().collect();
+        let mut allergen_list: Vec<String> = allergenic_ingrediants.keys().cloned().collect();
         allergen_list.sort_unstable();
 
-        let mut cdil = "".to_owned();
-        for (i, allergen) in allergen_list.iter().enumerate() {
-            cdil += found_allergens.get(allergen).unwrap();
-            if i < allergen_list.len() - 1 {
-                cdil += ",";
-            }
-        }
-
-        cdil
+        allergen_list
+            .iter()
+            .map(|allergen| allergenic_ingrediants.get(allergen).unwrap().clone())
+            .collect::<Vec<String>>()
+            .join(",")
     }
 }
 
