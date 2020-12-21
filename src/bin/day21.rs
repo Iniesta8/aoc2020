@@ -75,8 +75,9 @@ impl Solution {
     }
 
     fn part2(food_list: &[Food]) -> String {
-        let mut possible_allergens = find_possible_allergens(food_list);
         let mut found_allergens: HashMap<String, String> = HashMap::new();
+
+        let mut possible_allergens = find_possible_allergens(food_list);
 
         while found_allergens.len() != possible_allergens.len() {
             for (allergen, ingredients) in possible_allergens.iter_mut() {
@@ -88,14 +89,15 @@ impl Solution {
                         .insert(allergen.clone(), ingredients.iter().next().unwrap().clone());
                     continue;
                 }
-
                 for found in found_allergens.values() {
                     ingredients.remove(found);
                 }
             }
         }
+
         let mut allergen_list: Vec<String> = found_allergens.keys().cloned().collect();
         allergen_list.sort_unstable();
+
         let mut cdil = "".to_owned();
         for (i, allergen) in allergen_list.iter().enumerate() {
             cdil += found_allergens.get(allergen).unwrap();
