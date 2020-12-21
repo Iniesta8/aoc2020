@@ -69,33 +69,62 @@ fn count_ingredients_without_allergens(
 struct Solution;
 
 impl Solution {
-    fn part1(input: &str) -> usize {
-        let food_list: Vec<Food> = input.lines().map(parse_food).collect();
-        let possible_allergens = find_possible_allergens(&food_list);
+    fn part1(food_list: &[Food]) -> usize {
+        let possible_allergens = find_possible_allergens(food_list);
         count_ingredients_without_allergens(&food_list, &possible_allergens)
     }
 
-    // fn part2(input: &str) -> usize {
-    // unimplemented!()
-    // }
+    fn part2(food_list: &[Food]) -> String {
+        let mut possible_allergens = find_possible_allergens(food_list);
+        let mut found_allergens: HashMap<String, String> = HashMap::new();
+
+        while found_allergens.len() != possible_allergens.len() {
+            for (allergen, ingredients) in possible_allergens.iter_mut() {
+                if found_allergens.contains_key(allergen) {
+                    continue;
+                }
+                if ingredients.len() == 1 {
+                    found_allergens
+                        .insert(allergen.clone(), ingredients.iter().nth(0).unwrap().clone());
+                    continue;
+                }
+
+                for found in found_allergens.values() {
+                    ingredients.remove(found);
+                }
+            }
+        }
+        let mut allergen_list: Vec<String> = found_allergens.keys().cloned().collect();
+        allergen_list.sort_unstable();
+        let mut cdil = "".to_owned();
+        for (i, allergen) in allergen_list.iter().enumerate() {
+            cdil += found_allergens.get(allergen).unwrap();
+            if i < allergen_list.len() - 1 {
+                cdil += ",";
+            }
+        }
+
+        cdil
+    }
 }
 
 fn main() {
     let input = fs::read_to_string("./input/day21.txt").expect("File not found!");
+    let food_list: Vec<Food> = input.lines().map(parse_food).collect();
 
     let timer = Instant::now();
     println!(
         "p1: {} (runtime: {:?})",
-        Solution::part1(&input),
+        Solution::part1(&food_list),
         timer.elapsed()
     );
 
-    // let timer = Instant::now();
-    // println!(
-    // "p2: {} (runtime: {:?})",
-    // Solution::part2(&input),
-    // timer.elapsed()
-    // );
+    let timer = Instant::now();
+    println!(
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&food_list),
+        timer.elapsed()
+    );
 }
 
 #[cfg(test)]
@@ -103,12 +132,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_day21_part1() {
+    fn test_day21() {
         let input = "\
 mxmxvkd kfcds sqjhc nhms (contains dairy, fish)
 trh fvjkl sbzzf mxmxvkd (contains dairy)
 sqjhc fvjkl (contains soy)
 sqjhc mxmxvkd sbzzf (contains fish)";
-        assert_eq!(Solution::part1(&input), 5);
+        let food_list: Vec<Food> = input.lines().map(parse_food).collect();
+        assert_eq!(Solution::part1(&food_list), 5);
+        assert_eq!(Solution::part2(&food_list), "mxmxvkd,sqjhc,fvjkl");
     }
 }
