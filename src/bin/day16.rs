@@ -82,7 +82,7 @@ fn get_valid_tickets(notes: &TicketNotes) -> Vec<Ticket> {
         .collect()
 }
 
-fn find_possible_fields(notes: &TicketNotes, valid_tickets: &Vec<Ticket>) -> Vec<HashSet<String>> {
+fn find_possible_fields(notes: &TicketNotes, valid_tickets: &[Ticket]) -> Vec<HashSet<String>> {
     let mut possible_fields: Vec<HashSet<String>> =
         vec![notes.ticket_fields.keys().cloned().collect(); notes.ticket_fields.len()];
 

@@ -12,7 +12,7 @@ fn parse(input: &str) -> Vec<Instruction> {
     input
         .lines()
         .map(|line| {
-            let inst: Vec<&str> = line.split("=").map(str::trim).collect();
+            let inst: Vec<&str> = line.split('=').map(str::trim).collect();
             match inst[0] {
                 "mask" => Instruction::Mask(inst[1].to_owned()),
                 token if token.starts_with("mem") => {
@@ -29,7 +29,7 @@ fn parse(input: &str) -> Vec<Instruction> {
 // Returns two bitmasks: (AND-mask, OR-mask)
 // AND-mask to set 0's (clear 1's)
 // OR-mask to set 1's
-fn create_masks_v1(raw_mask: &String) -> (usize, usize) {
+fn create_masks_v1(raw_mask: &str) -> (usize, usize) {
     raw_mask
         .chars()
         .rev()
@@ -42,7 +42,7 @@ fn create_masks_v1(raw_mask: &String) -> (usize, usize) {
         })
 }
 
-fn calculate_dest_addresses(raw_mask: &String, raw_address: usize) -> Vec<usize> {
+fn calculate_dest_addresses(raw_mask: &str, raw_address: usize) -> Vec<usize> {
     let mut res = vec![];
     let len = raw_mask.chars().filter(|&c| c == 'X').count();
 
@@ -71,7 +71,7 @@ fn write_to_mem(
     version: usize,
     mem: &mut HashMap<usize, usize>,
     address: usize,
-    mask: &String,
+    mask: &str,
     new_value: usize,
 ) {
     match version {
@@ -88,11 +88,7 @@ fn write_to_mem(
     }
 }
 
-fn process(
-    version: usize,
-    mut memory: &mut HashMap<usize, usize>,
-    instructions: &Vec<Instruction>,
-) {
+fn process(version: usize, mut memory: &mut HashMap<usize, usize>, instructions: &[Instruction]) {
     let mut mask = String::from("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     for inst in instructions.iter() {
         match inst {
@@ -109,13 +105,13 @@ fn process(
 struct Solution;
 
 impl Solution {
-    fn part1(instructions: &Vec<Instruction>) -> usize {
+    fn part1(instructions: &[Instruction]) -> usize {
         let mut memory = HashMap::new();
         process(1, &mut memory, &instructions);
         memory.values().sum()
     }
 
-    fn part2(instructions: &Vec<Instruction>) -> usize {
+    fn part2(instructions: &[Instruction]) -> usize {
         let mut memory = HashMap::new();
         process(2, &mut memory, &instructions);
         memory.values().sum()

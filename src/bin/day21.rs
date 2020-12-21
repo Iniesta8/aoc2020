@@ -14,7 +14,7 @@ fn parse_food(food_str: &str) -> Food {
     let allergens: HashSet<String> = token[1]
         .replace(')', "")
         .replace("contains ", "")
-        .split(",")
+        .split(',')
         .map(|s| s.trim().to_owned())
         .collect();
 
@@ -85,7 +85,7 @@ impl Solution {
                 }
                 if ingredients.len() == 1 {
                     found_allergens
-                        .insert(allergen.clone(), ingredients.iter().nth(0).unwrap().clone());
+                        .insert(allergen.clone(), ingredients.iter().next().unwrap().clone());
                     continue;
                 }
 

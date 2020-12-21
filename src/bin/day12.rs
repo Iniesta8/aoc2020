@@ -67,7 +67,7 @@ impl Ferry {
         self.facing = (self.facing + degrees).rem_euclid(360);
     }
 
-    fn process_instructions_immediate(&mut self, instructions: &Vec<Instruction>) {
+    fn process_instructions_immediate(&mut self, instructions: &[Instruction]) {
         for &instr in instructions {
             match instr {
                 Instruction::North(dist) => self.position.1 += dist,
@@ -95,7 +95,7 @@ impl Ferry {
         self.position.1 += times * self.waypoint.1;
     }
 
-    fn process_instructions_relative(&mut self, instructions: &Vec<Instruction>) {
+    fn process_instructions_relative(&mut self, instructions: &[Instruction]) {
         for &instr in instructions {
             match instr {
                 Instruction::North(value) => self.waypoint.1 += value,
@@ -113,13 +113,13 @@ impl Ferry {
 struct Solution;
 
 impl Solution {
-    fn part1(ferry: &mut Ferry, instructions: &Vec<Instruction>) -> i32 {
-        ferry.process_instructions_immediate(&instructions);
+    fn part1(ferry: &mut Ferry, instructions: &[Instruction]) -> i32 {
+        ferry.process_instructions_immediate(instructions);
         ferry.dist_from_start()
     }
 
-    fn part2(ferry: &mut Ferry, instructions: &Vec<Instruction>) -> i32 {
-        ferry.process_instructions_relative(&instructions);
+    fn part2(ferry: &mut Ferry, instructions: &[Instruction]) -> i32 {
+        ferry.process_instructions_relative(instructions);
         ferry.dist_from_start()
     }
 }

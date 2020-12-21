@@ -186,14 +186,14 @@ fn build_regex(rules: &HashMap<usize, Rule>, rule_to_eval: usize) -> String {
 struct Solution;
 
 impl Solution {
-    fn part1(messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
+    fn part1(messages: &[String], rules: &HashMap<usize, Rule>) -> usize {
         messages
             .iter()
             .filter(|msg| message_valid(msg, rules))
             .count()
     }
 
-    fn part2(_messages: &Vec<String>, rules: &HashMap<usize, Rule>) -> usize {
+    fn part2(_messages: &[String], rules: &HashMap<usize, Rule>) -> usize {
         let regex_string = format!("^{}$", build_regex(rules, 0));
 
         // println!("{}", regex_string);
