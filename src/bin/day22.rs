@@ -18,7 +18,7 @@ fn calc_score(deck: &VecDeque<usize>) -> usize {
 }
 
 fn play_crab_combat(decks: &mut [VecDeque<usize>]) -> usize {
-    while decks.iter().all(|d| d.len() > 0) {
+    while decks.iter().all(|d| !d.is_empty()) {
         let d0 = decks[0].pop_front().unwrap();
         let d1 = decks[1].pop_front().unwrap();
 
@@ -53,7 +53,7 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: &mut usize, round:
 
     println!("=== Game {} ===\n", game);
 
-    while decks.iter().all(|d| d.len() > 0) {
+    while decks.iter().all(|d| !d.is_empty()) {
         round += 1;
 
         println!("-- Round {} (Game {}) --", round, game);
@@ -76,7 +76,7 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: &mut usize, round:
             // start a subgame
             println!("Playing a sub-game to determine the winner...\n");
             let winner = play_recursive_combat(
-                &mut vec![
+                &mut [
                     decks[0].iter().take(d0).cloned().collect(),
                     decks[1].iter().take(d1).cloned().collect(),
                 ],
