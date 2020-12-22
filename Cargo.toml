@@ -10,6 +10,7 @@ edition = "2018"
 ring-algorithm = "^0.2"
 peg = "0.6.3"
 regex = "1.4.2"
+pcre2 = "0.2.3"
 
 [profile.release]
 debug = true
