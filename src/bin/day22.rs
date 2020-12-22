@@ -44,16 +44,22 @@ fn play_crab_combat(decks: &mut [VecDeque<usize>]) -> usize {
     }
 }
 
-fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: usize, round: usize) -> usize {
-    let mut game = game;
+fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: &mut usize, round: usize) -> usize {
     let mut round = round;
     let mut played_decks: HashSet<VecDeque<usize>> = HashSet::new();
+    *game += 1;
+    let mut next_game = *game + 1;
+
+    println!("=== Game {} ===\n", game);
+
     while decks.iter().all(|d| d.len() > 0) {
         round += 1;
 
+        println!("-- Round {} (Game {}) --", round, game);
+
         if !played_decks.insert(decks[0].clone()) {
             println!("Already played decks: {:?}/{:?}", decks[0], decks[1]);
-            println!("Player 1 wins!");
+            println!("Player 1 wins!\n");
             return 0;
         }
 
@@ -66,15 +72,15 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: usize, round: usiz
         println!("Player 2 plays: {:?}", d1);
 
         if decks[0].len() >= d0 && decks[1].len() >= d1 {
-            // start subgame
-            println!("Playing a sub-game to determine the winner...");
-            game += 1;
+            // let mut next_game = game.clone();
+            // start a subgame
+            println!("Playing a sub-game to determine the winner...\n");
             let winner = play_recursive_combat(
                 &mut vec![
                     decks[0].iter().take(d0).cloned().collect(),
                     decks[1].iter().take(d1).cloned().collect(),
                 ],
-                game,
+                &mut next_game,
                 0,
             );
             if winner == 0 {
@@ -84,12 +90,19 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: usize, round: usiz
                 decks[1].push_back(d1);
                 decks[1].push_back(d0);
             }
+            println!("...anyway, back to game {}", game);
+            println!(
+                "Player {} wins round {} of game {}!\n",
+                winner + 1,
+                round,
+                game
+            );
         } else {
             match d0.cmp(&d1) {
                 std::cmp::Ordering::Less => {
                     decks[1].push_back(d1);
                     decks[1].push_back(d0);
-                    println!("Player 2 wins round {} of game {}!", round, game);
+                    println!("Player 2 wins round {} of game {}!\n", round, game);
                 }
                 std::cmp::Ordering::Equal => {
                     unreachable!()
@@ -97,15 +110,17 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: usize, round: usiz
                 std::cmp::Ordering::Greater => {
                     decks[0].push_back(d0);
                     decks[0].push_back(d1);
-                    println!("Player 1 wins round {} of game {}!", round, game);
+                    println!("Player 1 wins round {} of game {}!\n", round, game);
                 }
             }
         }
     }
 
     if !decks[0].is_empty() {
+        println!("The winner of game {} is player {}!\n", game, 1);
         0
     } else {
+        println!("The winner of game {} is player {}!\n", game, 2);
         1
     }
 }
@@ -119,7 +134,12 @@ impl Solution {
     }
 
     fn part2(mut decks: &mut [VecDeque<usize>]) -> usize {
-        let winner = play_recursive_combat(&mut decks, 1, 0);
+        let winner = play_recursive_combat(&mut decks, &mut 0, 0);
+
+        println!("== Post-game results ==");
+        println!("Player 1's deck: {:?}", decks[0]);
+        println!("Player 2's deck: {:?}", decks[1]);
+
         calc_score(&decks[winner])
     }
 }
