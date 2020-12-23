@@ -1,28 +1,10 @@
 # aoc2020
 My Rust solutions to Advent of Code 2020
 
-- [day 1](src/bin/day01.rs)
-- [day 2](src/bin/day02.rs)
-- [day 3](src/bin/day03.rs)
-- [day 4](src/bin/day04.rs)
-- [day 5](src/bin/day05.rs)
-- [day 6](src/bin/day06.rs)
-- [day 7](src/bin/day07.rs)
-- [day 8](src/bin/day08.rs)
-- [day 9](src/bin/day09.rs)
-- [day 10](src/bin/day10.rs)
-- [day 11](src/bin/day11.rs)
-- [day 12](src/bin/day12.rs)
-- [day 13](src/bin/day13.rs)
-- [day 14](src/bin/day14.rs)
-- [day 15](src/bin/day15.rs)
-- [day 16](src/bin/day16.rs)
-- [day 17](src/bin/day17.rs)
-- [day 18](src/bin/day18.rs)
-- [day 19](src/bin/day19.rs)
-- [day 20](src/bin/day20.rs)
-- [day 21](src/bin/day21.rs)
-- [day 22](src/bin/day22.rs)
-- [day 23](src/bin/day23.rs)
-- [day 24](src/bin/day24.rs)
-- [day 25](src/bin/day25.rs)
+| Mon                    | Tue                    | Wed                    | Thu                    | Fri                    | Sat                    | Sun                    |
+|:-----------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------|:-----------------------|
+|                        | [1](src/bin/day1.rs)   | [2](src/bin/day2.rs)   | [3](src/bin/day3.rs)   | [4](src/bin/day4.rs)   | [5](src/bin/day5.rs)   | [6](src/bin/day6.rs)   |
+| [7](src/bin/day7.rs)   | [8](src/bin/day8.rs)   | [9](src/bin/day9.rs)   | [10](src/bin/day10.rs) | [11](src/bin/day11.rs) | [12](src/bin/day12.rs) | [13](src/bin/day13.rs) |
+| [14](src/bin/day14.rs) | [15](src/bin/day15.rs) | [16](src/bin/day16.rs) | [17](src/bin/day17.rs) | [18](src/bin/day18.rs) | [19](src/bin/day19.rs) | [20](src/bin/day20.rs) |
+| [21](src/bin/day21.rs) | [22](src/bin/day22.rs) | [23](src/bin/day23.rs) | [24](src/bin/day24.rs) | [25](src/bin/day25.rs) |                        |                        |
+
