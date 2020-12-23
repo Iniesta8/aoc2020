@@ -19,6 +19,10 @@ fn list_to_vec(cups: &[usize], current_cup: usize) -> Vec<usize> {
     res
 }
 
+fn get_next_two_cups(cups: &[usize], current_cup: usize) -> (usize, usize) {
+    (cups[current_cup], cups[cups[current_cup]])
+}
+
 fn single_move(cups_list: &mut [usize], current_cup: usize) -> usize {
     let n = cups_list.len() - 1;
 
@@ -26,12 +30,11 @@ fn single_move(cups_list: &mut [usize], current_cup: usize) -> usize {
     let p1 = cups_list[current_cup];
     let p2 = cups_list[p1];
     let p3 = cups_list[p2];
-    let picks: Vec<usize> = vec![p1, p2, p3];
 
     cups_list[current_cup] = cups_list[p3];
 
     let mut dst = if current_cup > 1 { current_cup - 1 } else { n };
-    while picks.contains(&dst) {
+    while [p1, p2, p3].contains(&dst) {
         dst = if dst > 1 { dst - 1 } else { n };
     }
 
@@ -70,7 +73,7 @@ impl Solution {
         let num_cups = 1_000_000;
 
         // build poor man's linked list
-        let mut cups_list: Vec<usize> = (1..(num_cups + 2)).into_iter().collect();
+        let mut cups_list: Vec<usize> = (1..=(num_cups + 1)).into_iter().collect();
         cups_list[num_cups] = cups[0];
         for w in cups.windows(2) {
             cups_list[w[0]] = w[1];
@@ -81,8 +84,8 @@ impl Solution {
         for _ in 0..10_000_000 {
             current_cup = single_move(&mut cups_list, current_cup);
         }
-        let final_cups = list_to_vec(&cups_list, 1);
-        final_cups[1] * final_cups[2]
+        let (next, sec_next) = get_next_two_cups(&cups_list, 1);
+        next * sec_next
     }
 }
 
