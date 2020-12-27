@@ -112,7 +112,7 @@ impl Tile {
 
         for y in 1..self.pixels.len() - 1 {
             for x in 1..self.pixels[0].len() - 1 {
-                borderless[x][y] = self.pixels[x][y];
+                borderless[x - 1][y - 1] = self.pixels[x][y];
             }
         }
 
@@ -251,6 +251,42 @@ impl SeaMonster {
     }
 }
 
+type Picture = Vec<Vec<char>>;
+
+fn create_picture(solved_puzzle: &HashMap<(i32, i32), Tile>) -> Picture {
+    let relocated_puzzle = relocate(&solved_puzzle);
+
+    let mut borderless_puzzle: Vec<Vec<Tile>> = vec![];
+    for row in relocated_puzzle.iter() {
+        let mut tmp: Vec<Tile> = vec![];
+        for tile in row.iter() {
+            tmp.push(tile.remove_borders());
+        }
+        borderless_puzzle.push(tmp);
+    }
+
+    let tile_width = borderless_puzzle[0][0].pixels[0].len();
+    let tile_height = borderless_puzzle[0][0].pixels.len();
+    let puzzle_width = borderless_puzzle[0].len();
+    let puzzle_height = borderless_puzzle.len();
+
+    let mut picture = vec![vec![' '; tile_width * puzzle_width]; tile_height * puzzle_height];
+
+    for (i, r) in borderless_puzzle.iter().enumerate() {
+        for (j, tile) in r.iter().enumerate() {
+            for (off_i, tr) in tile.pixels.iter().enumerate() {
+                for (off_j, p) in tr.iter().enumerate() {
+                    picture[i * tile_height + off_i][j * tile_width + off_j] = *p;
+                }
+            }
+        }
+    }
+
+    // dbg!(&picture[0]);
+
+    picture
+}
+
 struct Solution;
 
 impl Solution {
@@ -266,6 +302,16 @@ impl Solution {
             * relocated_puzzle[puzzle_height - 1][puzzle_width - 1].id
             * relocated_puzzle[puzzle_height - 1][0].id
     }
+
+    fn part2(tiles: &[Tile]) -> usize {
+        let solved_puzzle = solve_puzzle(&tiles);
+
+        let picture = create_picture(&solved_puzzle);
+
+        // dbg!(picture);
+
+        0
+    }
 }
 
 fn main() {
@@ -278,10 +324,17 @@ fn main() {
 
     // dbg!(&tiles.len()); // 144 -> square of 12x12
 
+    // let timer = Instant::now();
+    // println!(
+    // "p1: {} (runtime: {:?})",
+    // Solution::part1(&tiles),
+    // timer.elapsed()
+    // );
+
     let timer = Instant::now();
     println!(
-        "p1: {} (runtime: {:?})",
-        Solution::part1(&tiles),
+        "p2: {} (runtime: {:?})",
+        Solution::part2(&tiles),
         timer.elapsed()
     );
 }
@@ -406,6 +459,29 @@ Tile 3079:
             .map(Tile::from_raw_data)
             .collect();
 
+        // let solved_puzzle: HashMap<(i32, i32), Tile> = solve_puzzle(&tiles);
+
+        // let relocated_puzzle = relocate(&solved_puzzle);
+        //
+        // for i in 0..relocated_puzzle.len() {
+        // for j in 0..relocated_puzzle[0].len() {
+        // print!("{} ", relocated_puzzle[i][j].id);
+        // }
+        // println!();
+        // }
+
+        // let picture = create_picture(&solved_puzzle);
+        //
+        // dbg!(picture.len());
+        //
+        // for i in 0..picture.len() {
+        // for j in 0..picture[0].len() {
+        // print!("{}", picture[i][j]);
+        // }
+        // println!();
+        // }
+
         assert_eq!(Solution::part1(&tiles), 20899048083289);
+        // Solution::part2(&tiles);
     }
 }
