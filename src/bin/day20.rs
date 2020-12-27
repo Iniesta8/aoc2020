@@ -1,14 +1,19 @@
 use std::{collections::HashMap, time::Instant};
 use std::{collections::HashSet, fs};
 
+enum ImageProcessingMode {
+    Flip,
+    Rotate,
+}
+
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 struct Tile {
     id: usize,
     pixels: Vec<Vec<char>>,
-    top_border: Vec<char>,
-    bottom_border: Vec<char>,
-    left_border: Vec<char>,
-    right_border: Vec<char>,
+    top_border: Option<Vec<char>>,
+    bottom_border: Option<Vec<char>>,
+    left_border: Option<Vec<char>>,
+    right_border: Option<Vec<char>>,
 }
 
 impl Tile {
@@ -16,14 +21,13 @@ impl Tile {
         Self {
             id: 0,
             pixels: vec![vec!['.'; 10]; 10],
-            top_border: vec!['.'; 10],
-            bottom_border: vec!['.'; 10],
-            left_border: vec!['.'; 10],
-            right_border: vec!['.'; 10],
+            top_border: None,    // Some(vec!['.'; 10]),
+            bottom_border: None, // vec!['.'; 10],
+            left_border: None,   // vec!['.'; 10],
+            right_border: None,  // vec!['.'; 10],
         }
     }
     fn from_raw_data(data: &str) -> Self {
-        // dbg!(&data);
         let lines: Vec<&str> = data.lines().collect();
 
         let id: usize = lines[0]
@@ -40,10 +44,10 @@ impl Tile {
             .map(|line| line.chars().collect())
             .collect();
 
-        let top_border = pixels[0].clone();
-        let bottom_border = pixels[pixels.len() - 1].clone();
-        let left_border = pixels.iter().map(|l| l[0]).collect();
-        let right_border = pixels.iter().map(|l| l[l.len() - 1]).collect();
+        let top_border = Some(pixels[0].clone());
+        let bottom_border = Some(pixels[pixels.len() - 1].clone());
+        let left_border = Some(pixels.iter().map(|l| l[0]).collect());
+        let right_border = Some(pixels.iter().map(|l| l[l.len() - 1]).collect());
 
         Self {
             id,
@@ -56,37 +60,31 @@ impl Tile {
     }
 
     fn flip(&mut self) {
-        let origin = self.pixels.clone();
-        for y in 0..origin.len() {
-            for x in 0..origin[y].len() {
-                self.pixels[y][x] = origin[y][origin.len() - x - 1];
-            }
-        }
-
+        let origin = self.clone();
+        self.pixels = process_image(ImageProcessingMode::Flip, &origin.pixels);
         std::mem::swap(&mut self.right_border, &mut self.left_border);
-        self.top_border = Self::reverse_border(&self.top_border);
-        self.bottom_border = Self::reverse_border(&self.bottom_border);
+        self.top_border = Self::reverse_border(&origin.top_border);
+        self.bottom_border = Self::reverse_border(&origin.bottom_border);
     }
 
     fn rotate(&mut self) {
         let origin = self.clone();
-        for y in 0..origin.pixels.len() {
-            for x in 0..origin.pixels[y].len() {
-                self.pixels[y][x] = origin.pixels[origin.pixels.len() - x - 1][y];
-            }
-        }
-
+        self.pixels = process_image(ImageProcessingMode::Rotate, &origin.pixels);
         self.right_border = origin.top_border;
         self.top_border = Self::reverse_border(&origin.left_border);
         self.left_border = origin.bottom_border;
         self.bottom_border = Self::reverse_border(&origin.right_border);
     }
 
-    fn reverse_border(border: &[char]) -> Vec<char> {
-        border.iter().rev().copied().collect()
+    fn reverse_border(border: &Option<Vec<char>>) -> Option<Vec<char>> {
+        if let Some(border) = border {
+            Some(border.iter().rev().copied().collect())
+        } else {
+            None
+        }
     }
 
-    fn options(tile: &Tile) -> Vec<Tile> {
+    fn orientation_options(tile: &Tile) -> Vec<Tile> {
         let tile_r0 = tile.clone();
         let mut tile_r1 = tile_r0.clone();
         tile_r1.rotate();
@@ -108,6 +106,38 @@ impl Tile {
             tile_r0, tile_r1, tile_r2, tile_r3, tile_f0, tile_f1, tile_f2, tile_f3,
         ]
     }
+
+    fn remove_borders(&self) -> Tile {
+        let mut borderless = vec![vec!['.'; self.pixels[0].len() - 2]; self.pixels.len() - 2];
+
+        for y in 1..self.pixels.len() - 1 {
+            for x in 1..self.pixels[0].len() - 1 {
+                borderless[x][y] = self.pixels[x][y];
+            }
+        }
+
+        Tile {
+            id: self.id,
+            pixels: borderless,
+            top_border: None,
+            bottom_border: None,
+            left_border: None,
+            right_border: None,
+        }
+    }
+}
+
+fn process_image(mode: ImageProcessingMode, origin: &[Vec<char>]) -> Vec<Vec<char>> {
+    let mut processed: Vec<Vec<char>> = origin.iter().cloned().collect();
+    for y in 0..origin.len() {
+        for x in 0..origin[y].len() {
+            match mode {
+                ImageProcessingMode::Flip => processed[y][x] = origin[y][origin.len() - x - 1],
+                ImageProcessingMode::Rotate => processed[y][x] = origin[origin.len() - x - 1][y],
+            }
+        }
+    }
+    processed
 }
 
 fn solve_puzzle(tiles: &[Tile]) -> HashMap<(i32, i32), Tile> {
@@ -120,21 +150,21 @@ fn solve_puzzle(tiles: &[Tile]) -> HashMap<(i32, i32), Tile> {
 
     while let Some(((cur_x, cur_y), cur_tile)) = unplaced_tiles.iter().cloned().next() {
         for unused_tile in unused_tiles.clone().iter() {
-            for option in Tile::options(&unused_tile) {
-                if option.left_border == cur_tile.right_border {
-                    unplaced_tiles.insert(((cur_x + 1, cur_y), option));
+            for orientation in Tile::orientation_options(&unused_tile) {
+                if orientation.left_border == cur_tile.right_border {
+                    unplaced_tiles.insert(((cur_x + 1, cur_y), orientation));
                     unused_tiles.remove(&unused_tile);
                     break;
-                } else if option.right_border == cur_tile.left_border {
-                    unplaced_tiles.insert(((cur_x - 1, cur_y), option));
+                } else if orientation.right_border == cur_tile.left_border {
+                    unplaced_tiles.insert(((cur_x - 1, cur_y), orientation));
                     unused_tiles.remove(&unused_tile);
                     break;
-                } else if option.bottom_border == cur_tile.top_border {
-                    unplaced_tiles.insert(((cur_x, cur_y - 1), option));
+                } else if orientation.bottom_border == cur_tile.top_border {
+                    unplaced_tiles.insert(((cur_x, cur_y - 1), orientation));
                     unused_tiles.remove(&unused_tile);
                     break;
-                } else if option.top_border == cur_tile.bottom_border {
-                    unplaced_tiles.insert(((cur_x, cur_y + 1), option));
+                } else if orientation.top_border == cur_tile.bottom_border {
+                    unplaced_tiles.insert(((cur_x, cur_y + 1), orientation));
                     unused_tiles.remove(&unused_tile);
                     break;
                 }
@@ -164,6 +194,61 @@ fn relocate(puzzle_map: &HashMap<(i32, i32), Tile>) -> Vec<Vec<Tile>> {
     }
 
     relocated_puzzle
+}
+
+#[derive(Clone)]
+struct SeaMonster {
+    pixels: Vec<Vec<char>>,
+}
+
+impl SeaMonster {
+    fn new() -> Self {
+        Self {
+            pixels: vec![
+                "                  # ".chars().collect(),
+                "#    ##    ##    ###".chars().collect(),
+                " #  #  #  #  #  #   ".chars().collect(),
+            ],
+        }
+    }
+
+    fn flip(&mut self) {
+        self.pixels = process_image(ImageProcessingMode::Flip, &self.pixels.clone());
+    }
+
+    fn rotate(&mut self) {
+        self.pixels = process_image(ImageProcessingMode::Rotate, &self.pixels.clone());
+    }
+
+    fn orientation_options(sea_monster: &SeaMonster) -> Vec<SeaMonster> {
+        let sea_monster_r0 = sea_monster.clone();
+        let mut sea_monster_r1 = sea_monster_r0.clone();
+        sea_monster_r1.rotate();
+        let mut sea_monster_r2 = sea_monster_r1.clone();
+        sea_monster_r2.rotate();
+        let mut sea_monster_r3 = sea_monster_r2.clone();
+        sea_monster_r3.rotate();
+
+        let mut sea_monster_f0 = sea_monster_r0.clone();
+        sea_monster_f0.flip();
+        let mut sea_monster_f1 = sea_monster_r1.clone();
+        sea_monster_f1.flip();
+        let mut sea_monster_f2 = sea_monster_r2.clone();
+        sea_monster_f2.flip();
+        let mut sea_monster_f3 = sea_monster_r3.clone();
+        sea_monster_f3.flip();
+
+        vec![
+            sea_monster_r0,
+            sea_monster_r1,
+            sea_monster_r2,
+            sea_monster_r3,
+            sea_monster_f0,
+            sea_monster_f1,
+            sea_monster_f2,
+            sea_monster_f3,
+        ]
+    }
 }
 
 struct Solution;
