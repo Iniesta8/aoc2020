@@ -16,7 +16,7 @@ fn occupy_all_seats(grid: &mut Grid) {
     }
 }
 
-fn count_adjacent_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
+fn count_adjacent_occupied_seats(grid: &[Vec<char>], pos: (i32, i32)) -> usize {
     let (x, y) = pos;
 
     let adjacent_pos: Vec<(i32, i32)> = [
@@ -42,7 +42,7 @@ fn count_adjacent_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
         .count()
 }
 
-fn count_visible_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
+fn count_visible_occupied_seats(grid: &[Vec<char>], pos: (i32, i32)) -> usize {
     let (x, y) = pos;
     let mut count = 0;
 
@@ -82,7 +82,7 @@ fn count_visible_occupied_seats(grid: &Grid, pos: (i32, i32)) -> usize {
 
 fn simulate_once<F>(grid: &mut Grid, count_func: F, threshold: usize) -> bool
 where
-    F: Fn(&Grid, (i32, i32)) -> usize,
+    F: Fn(&[Vec<char>], (i32, i32)) -> usize,
 {
     let cur_grid = grid.clone();
     let mut changed = false;
@@ -106,7 +106,7 @@ where
     changed
 }
 
-fn count_occupied_seats(grid: &Grid) -> usize {
+fn count_occupied_seats(grid: &[Vec<char>]) -> usize {
     grid.iter().flatten().filter(|&c| *c == '#').count()
 }
 
