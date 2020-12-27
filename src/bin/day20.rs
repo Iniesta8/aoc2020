@@ -1,4 +1,4 @@
-use std::{collections::HashMap, time::Instant};
+use std::{collections::HashMap, fmt::Display, time::Instant};
 use std::{collections::HashSet, fs};
 
 enum ImageProcessingMode {
@@ -10,21 +10,34 @@ enum ImageProcessingMode {
 struct Tile {
     id: usize,
     pixels: Vec<Vec<char>>,
-    top_border: Option<Vec<char>>,
-    bottom_border: Option<Vec<char>>,
-    left_border: Option<Vec<char>>,
-    right_border: Option<Vec<char>>,
+    top_border: Vec<char>,
+    bottom_border: Vec<char>,
+    left_border: Vec<char>,
+    right_border: Vec<char>,
+}
+
+impl Display for Tile {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "id: {}", self.id)?;
+        for i in 0..self.pixels.len() {
+            for j in 0..self.pixels[0].len() {
+                write!(f, "{}", self.pixels[i][j])?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
 }
 
 impl Tile {
     fn default() -> Self {
         Self {
             id: 0,
-            pixels: vec![vec!['.'; 10]; 10],
-            top_border: None,    // Some(vec!['.'; 10]),
-            bottom_border: None, // vec!['.'; 10],
-            left_border: None,   // vec!['.'; 10],
-            right_border: None,  // vec!['.'; 10],
+            pixels: vec![vec![' '; 10]; 10],
+            top_border: vec![' '; 10],
+            bottom_border: vec![' '; 10],
+            left_border: vec![' '; 10],
+            right_border: vec![' '; 10],
         }
     }
     fn from_raw_data(data: &str) -> Self {
@@ -44,10 +57,10 @@ impl Tile {
             .map(|line| line.chars().collect())
             .collect();
 
-        let top_border = Some(pixels[0].clone());
-        let bottom_border = Some(pixels[pixels.len() - 1].clone());
-        let left_border = Some(pixels.iter().map(|l| l[0]).collect());
-        let right_border = Some(pixels.iter().map(|l| l[l.len() - 1]).collect());
+        let top_border = pixels[0].clone();
+        let bottom_border = pixels[pixels.len() - 1].clone();
+        let left_border = pixels.iter().map(|l| l[0]).collect();
+        let right_border = pixels.iter().map(|l| l[l.len() - 1]).collect();
 
         Self {
             id,
@@ -76,12 +89,8 @@ impl Tile {
         self.bottom_border = Self::reverse_border(&origin.right_border);
     }
 
-    fn reverse_border(border: &Option<Vec<char>>) -> Option<Vec<char>> {
-        if let Some(border) = border {
-            Some(border.iter().rev().copied().collect())
-        } else {
-            None
-        }
+    fn reverse_border(border: &[char]) -> Vec<char> {
+        border.iter().rev().copied().collect()
     }
 
     fn orientation_options(tile: &Tile) -> Vec<Tile> {
@@ -107,33 +116,36 @@ impl Tile {
         ]
     }
 
-    fn remove_borders(&self) -> Tile {
-        let mut borderless = vec![vec!['.'; self.pixels[0].len() - 2]; self.pixels.len() - 2];
+    fn remove_borders(tile: &Tile) -> Vec<Vec<char>> {
+        let mut borderless = vec![vec![' '; tile.pixels[0].len() - 2]; tile.pixels.len() - 2];
 
-        for y in 1..self.pixels.len() - 1 {
-            for x in 1..self.pixels[0].len() - 1 {
-                borderless[x - 1][y - 1] = self.pixels[x][y];
+        for y in 1..tile.pixels.len() - 1 {
+            for x in 1..tile.pixels[0].len() - 1 {
+                borderless[x - 1][y - 1] = tile.pixels[x][y];
             }
         }
 
-        Tile {
-            id: self.id,
-            pixels: borderless,
-            top_border: None,
-            bottom_border: None,
-            left_border: None,
-            right_border: None,
-        }
+        borderless
     }
 }
 
 fn process_image(mode: ImageProcessingMode, origin: &[Vec<char>]) -> Vec<Vec<char>> {
-    let mut processed: Vec<Vec<char>> = origin.iter().cloned().collect();
-    for y in 0..origin.len() {
-        for x in 0..origin[y].len() {
+    let mut processed = match mode {
+        ImageProcessingMode::Flip => origin.to_vec(),
+        ImageProcessingMode::Rotate => {
+            vec![vec![' '; origin.len()]; origin[0].len()]
+        }
+    };
+
+    for y in 0..processed.len() {
+        for x in 0..processed[0].len() {
             match mode {
-                ImageProcessingMode::Flip => processed[y][x] = origin[y][origin.len() - x - 1],
-                ImageProcessingMode::Rotate => processed[y][x] = origin[origin.len() - x - 1][y],
+                ImageProcessingMode::Flip => {
+                    processed[y][x] = origin[y][processed[y].len() - x - 1]
+                }
+                ImageProcessingMode::Rotate => {
+                    processed[y][x] = origin[processed[y].len() - x - 1][y]
+                }
             }
         }
     }
@@ -184,13 +196,10 @@ fn relocate(puzzle_map: &HashMap<(i32, i32), Tile>) -> Vec<Vec<Tile>> {
     let max_y = puzzle_map.iter().max_by_key(|(pos, _)| pos.1).unwrap().0 .1;
 
     let mut relocated_puzzle =
-        vec![vec![Tile::default(); (max_y - min_y + 1) as usize]; (max_x - min_x + 1) as usize];
-
-    let dx = if min_x <= 0 { -min_x } else { min_x };
-    let dy = if min_y <= 0 { -min_y } else { min_y };
+        vec![vec![Tile::default(); (max_x - min_x + 1) as usize]; (max_y - min_y + 1) as usize];
 
     for ((xi, yi), cur_tile) in puzzle_map.iter() {
-        relocated_puzzle[(xi + dx) as usize][(yi + dy) as usize] = cur_tile.clone();
+        relocated_puzzle[(yi - min_y) as usize][(xi - min_x) as usize] = cur_tile.clone();
     }
 
     relocated_puzzle
@@ -220,8 +229,28 @@ impl SeaMonster {
         self.pixels = process_image(ImageProcessingMode::Rotate, &self.pixels.clone());
     }
 
-    fn orientation_options(sea_monster: &SeaMonster) -> Vec<SeaMonster> {
-        let sea_monster_r0 = sea_monster.clone();
+    fn height(&self) -> usize {
+        self.pixels.len()
+    }
+
+    fn width(&self) -> usize {
+        self.pixels[0].len()
+    }
+
+    fn coords(&self) -> Vec<(usize, usize)> {
+        let mut coords = vec![];
+        for y in 0..self.pixels.len() {
+            for x in 0..self.pixels[0].len() {
+                if self.pixels[y][x] == '#' {
+                    coords.push((x, y));
+                }
+            }
+        }
+        coords
+    }
+
+    fn orientation_options() -> Vec<SeaMonster> {
+        let sea_monster_r0 = SeaMonster::new();
         let mut sea_monster_r1 = sea_monster_r0.clone();
         sea_monster_r1.rotate();
         let mut sea_monster_r2 = sea_monster_r1.clone();
@@ -256,25 +285,25 @@ type Picture = Vec<Vec<char>>;
 fn create_picture(solved_puzzle: &HashMap<(i32, i32), Tile>) -> Picture {
     let relocated_puzzle = relocate(&solved_puzzle);
 
-    let mut borderless_puzzle: Vec<Vec<Tile>> = vec![];
+    let mut sub_pictures: Vec<Vec<Picture>> = vec![];
     for row in relocated_puzzle.iter() {
-        let mut tmp: Vec<Tile> = vec![];
+        let mut tmp: Vec<Picture> = vec![];
         for tile in row.iter() {
-            tmp.push(tile.remove_borders());
+            tmp.push(Tile::remove_borders(&tile));
         }
-        borderless_puzzle.push(tmp);
+        sub_pictures.push(tmp);
     }
 
-    let tile_width = borderless_puzzle[0][0].pixels[0].len();
-    let tile_height = borderless_puzzle[0][0].pixels.len();
-    let puzzle_width = borderless_puzzle[0].len();
-    let puzzle_height = borderless_puzzle.len();
+    let tile_width = sub_pictures[0][0][0].len();
+    let tile_height = sub_pictures[0][0].len();
+    let puzzle_width = sub_pictures[0].len();
+    let puzzle_height = sub_pictures.len();
 
     let mut picture = vec![vec![' '; tile_width * puzzle_width]; tile_height * puzzle_height];
 
-    for (i, r) in borderless_puzzle.iter().enumerate() {
+    for (i, r) in sub_pictures.iter().enumerate() {
         for (j, tile) in r.iter().enumerate() {
-            for (off_i, tr) in tile.pixels.iter().enumerate() {
+            for (off_i, tr) in tile.iter().enumerate() {
                 for (off_j, p) in tr.iter().enumerate() {
                     picture[i * tile_height + off_i][j * tile_width + off_j] = *p;
                 }
@@ -282,9 +311,26 @@ fn create_picture(solved_puzzle: &HashMap<(i32, i32), Tile>) -> Picture {
         }
     }
 
-    // dbg!(&picture[0]);
-
     picture
+}
+
+fn count_sea_monsters(picture: &[Vec<char>]) -> usize {
+    let mut count = 0;
+    for monster_orientation in SeaMonster::orientation_options() {
+        for i in 0..picture.len() - monster_orientation.height() {
+            for j in 0..picture[0].len() - monster_orientation.width() {
+                if monster_orientation
+                    .coords()
+                    .iter()
+                    .all(|(xm, ym)| picture[i + ym][j + xm] == '#')
+                {
+                    count += 1;
+                }
+            }
+        }
+    }
+
+    count
 }
 
 struct Solution;
@@ -305,12 +351,13 @@ impl Solution {
 
     fn part2(tiles: &[Tile]) -> usize {
         let solved_puzzle = solve_puzzle(&tiles);
-
         let picture = create_picture(&solved_puzzle);
+        let num_sea_monsters = count_sea_monsters(&picture);
 
-        // dbg!(picture);
+        let num_pixel_sea_monster = 15;
 
-        0
+        picture.iter().flatten().filter(|&p| *p == '#').count()
+            - num_sea_monsters * num_pixel_sea_monster
     }
 }
 
@@ -322,14 +369,12 @@ fn main() {
         .map(Tile::from_raw_data)
         .collect();
 
-    // dbg!(&tiles.len()); // 144 -> square of 12x12
-
-    // let timer = Instant::now();
-    // println!(
-    // "p1: {} (runtime: {:?})",
-    // Solution::part1(&tiles),
-    // timer.elapsed()
-    // );
+    let timer = Instant::now();
+    println!(
+        "p1: {} (runtime: {:?})",
+        Solution::part1(&tiles),
+        timer.elapsed()
+    );
 
     let timer = Instant::now();
     println!(
@@ -459,29 +504,7 @@ Tile 3079:
             .map(Tile::from_raw_data)
             .collect();
 
-        // let solved_puzzle: HashMap<(i32, i32), Tile> = solve_puzzle(&tiles);
-
-        // let relocated_puzzle = relocate(&solved_puzzle);
-        //
-        // for i in 0..relocated_puzzle.len() {
-        // for j in 0..relocated_puzzle[0].len() {
-        // print!("{} ", relocated_puzzle[i][j].id);
-        // }
-        // println!();
-        // }
-
-        // let picture = create_picture(&solved_puzzle);
-        //
-        // dbg!(picture.len());
-        //
-        // for i in 0..picture.len() {
-        // for j in 0..picture[0].len() {
-        // print!("{}", picture[i][j]);
-        // }
-        // println!();
-        // }
-
         assert_eq!(Solution::part1(&tiles), 20899048083289);
-        // Solution::part2(&tiles);
+        assert_eq!(Solution::part2(&tiles), 273);
     }
 }
