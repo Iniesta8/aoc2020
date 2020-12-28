@@ -40,15 +40,6 @@ fn find_enc_weakness(data: &[usize], target: usize) -> usize {
     min + max
 }
 
-// fn find_enc_weakness(data: &[usize], target: usize) -> Option<usize> {
-// for i in 2..=data.len() {
-// if let Some(v) = data.windows(i).find(|w| target == w.iter().sum()) {
-// return Some(v.iter().max()? + v.iter().min()?);
-// }
-// }
-// None
-// }
-
 struct Solution;
 
 impl Solution {

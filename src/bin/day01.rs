@@ -45,7 +45,7 @@ impl Solution {
 }
 
 fn main() {
-    let input = fs::read_to_string("./input/day01.txt").unwrap();
+    let input = fs::read_to_string("./input/day01.txt").expect("File not found!");
     let values: Vec<i32> = input.lines().map(|x| x.parse::<i32>().unwrap()).collect();
 
     println!("p1: {}", Solution::part1(&values, 2020));

@@ -51,7 +51,7 @@ impl Solution {
 }
 
 fn main() {
-    let input: String = fs::read_to_string("./input/day02.txt").unwrap();
+    let input: String = fs::read_to_string("./input/day02.txt").expect("File not found!");
 
     let pw_data: Vec<PasswordData> = input
         .lines()
