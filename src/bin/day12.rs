@@ -159,7 +159,7 @@ F7
 R90
 F11";
         let mut ferry = Ferry::new();
-        assert_eq!(Solution::part1(&mut ferry, &parse(&input)), 25);
+        assert_eq!(Solution::part1(&mut ferry, &parse(input)), 25);
     }
 
     #[test]
@@ -171,6 +171,6 @@ F7
 R90
 F11";
         let mut ferry = Ferry::new();
-        assert_eq!(Solution::part2(&mut ferry, &parse(&input)), 286);
+        assert_eq!(Solution::part2(&mut ferry, &parse(input)), 286);
     }
 }

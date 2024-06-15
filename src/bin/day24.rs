@@ -135,7 +135,7 @@ fn calc_new_tile_color(color: Color, num_adjacent_black_tiles: usize) -> Color {
     match color {
         Color::Black
             if num_adjacent_black_tiles == 0
-                || (3..=6).into_iter().any(|c| c == num_adjacent_black_tiles) =>
+                || (3..=6).any(|c| c == num_adjacent_black_tiles) =>
         {
             Color::White
         }
@@ -152,7 +152,7 @@ fn process_tile(
 ) -> HashMap<Position, Color> {
     let (tile_pos, tile_color) = tile;
 
-    let adj_tiles = get_adjacent_tiles(&cur_grid, &tile_pos);
+    let adj_tiles = get_adjacent_tiles(cur_grid, tile_pos);
     let num_adj_black_tiles = count_black_tiles(&adj_tiles);
     let new_tile_color = calc_new_tile_color(*tile_color, num_adj_black_tiles);
 
@@ -172,7 +172,7 @@ fn flip_tiles(hexgrid: &HashMap<Position, Color>, cycles: usize) -> HashMap<Posi
             let adj_tiles = process_tile(&cur_grid, &mut next_grid, tile);
             let ext_tiles: HashMap<_, Color> = adj_tiles
                 .into_iter()
-                .filter(|(tile_pos, _)| !cur_grid.contains_key(&tile_pos))
+                .filter(|(tile_pos, _)| !cur_grid.contains_key(tile_pos))
                 .collect();
 
             for ext_tile in ext_tiles.iter() {
@@ -189,7 +189,7 @@ struct Solution;
 
 impl Solution {
     fn part1(hexgrid: &HashMap<Position, Color>) -> usize {
-        count_black_tiles(&hexgrid)
+        count_black_tiles(hexgrid)
     }
 
     fn part2(hexgrid: &HashMap<Position, Color>) -> usize {
@@ -244,7 +244,7 @@ nenewswnwewswnenesenwnesewesw
 eneswnwswnwsenenwnwnwwseeswneewsenese
 neswnwewnwnwseenwseesewsenwsweewe
 wseweeenwnesenwwwswnew";
-        let hexgrid: HashMap<Position, Color> = parse(&input);
+        let hexgrid: HashMap<Position, Color> = parse(input);
         assert_eq!(Solution::part1(&hexgrid), 10);
         assert_eq!(Solution::part2(&hexgrid), 2208);
     }

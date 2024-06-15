@@ -190,6 +190,6 @@ nearby tickets:
 40,4,50
 55,2,20
 38,6,12";
-        assert_eq!(Solution::part1(&parse(&input)), 71);
+        assert_eq!(Solution::part1(&parse(input)), 71);
     }
 }

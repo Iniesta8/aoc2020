@@ -160,24 +160,24 @@ fn solve_puzzle(tiles: &[Tile]) -> HashMap<(i32, i32), Tile> {
 
     let mut unused_tiles: HashSet<Tile> = tiles.iter().skip(1).cloned().collect();
 
-    while let Some(((cur_x, cur_y), cur_tile)) = unplaced_tiles.iter().cloned().next() {
+    while let Some(((cur_x, cur_y), cur_tile)) = unplaced_tiles.iter().next().cloned() {
         for unused_tile in unused_tiles.clone().iter() {
-            for orientation in Tile::orientation_options(&unused_tile) {
+            for orientation in Tile::orientation_options(unused_tile) {
                 if orientation.left_border == cur_tile.right_border {
                     unplaced_tiles.insert(((cur_x + 1, cur_y), orientation));
-                    unused_tiles.remove(&unused_tile);
+                    unused_tiles.remove(unused_tile);
                     break;
                 } else if orientation.right_border == cur_tile.left_border {
                     unplaced_tiles.insert(((cur_x - 1, cur_y), orientation));
-                    unused_tiles.remove(&unused_tile);
+                    unused_tiles.remove(unused_tile);
                     break;
                 } else if orientation.bottom_border == cur_tile.top_border {
                     unplaced_tiles.insert(((cur_x, cur_y - 1), orientation));
-                    unused_tiles.remove(&unused_tile);
+                    unused_tiles.remove(unused_tile);
                     break;
                 } else if orientation.top_border == cur_tile.bottom_border {
                     unplaced_tiles.insert(((cur_x, cur_y + 1), orientation));
-                    unused_tiles.remove(&unused_tile);
+                    unused_tiles.remove(unused_tile);
                     break;
                 }
             }
@@ -283,13 +283,13 @@ impl SeaMonster {
 type Picture = Vec<Vec<char>>;
 
 fn create_picture(solved_puzzle: &HashMap<(i32, i32), Tile>) -> Picture {
-    let relocated_puzzle = relocate(&solved_puzzle);
+    let relocated_puzzle = relocate(solved_puzzle);
 
     let mut sub_pictures: Vec<Vec<Picture>> = vec![];
     for row in relocated_puzzle.iter() {
         let mut tmp: Vec<Picture> = vec![];
         for tile in row.iter() {
-            tmp.push(Tile::remove_borders(&tile));
+            tmp.push(Tile::remove_borders(tile));
         }
         sub_pictures.push(tmp);
     }
@@ -337,7 +337,7 @@ struct Solution;
 
 impl Solution {
     fn part1(tiles: &[Tile]) -> usize {
-        let solved_puzzle: HashMap<(i32, i32), Tile> = solve_puzzle(&tiles);
+        let solved_puzzle: HashMap<(i32, i32), Tile> = solve_puzzle(tiles);
         let relocated_puzzle = relocate(&solved_puzzle);
 
         let puzzle_width = relocated_puzzle[0].len();
@@ -350,7 +350,7 @@ impl Solution {
     }
 
     fn part2(tiles: &[Tile]) -> usize {
-        let solved_puzzle = solve_puzzle(&tiles);
+        let solved_puzzle = solve_puzzle(tiles);
         let picture = create_picture(&solved_puzzle);
         let num_sea_monsters = count_sea_monsters(&picture);
 

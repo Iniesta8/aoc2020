@@ -33,7 +33,6 @@ fn find_possible_allergenic_ingredients(food_list: &[Food]) -> HashMap<String, H
                 Some(ingredients_set) => {
                     let new_ingredients = ingredients_set
                         .intersection(&food.ingredients)
-                        .into_iter()
                         .cloned()
                         .collect();
                     possible_allergens.insert(allergen.clone(), new_ingredients);
@@ -55,8 +54,7 @@ fn count_ingredients_without_allergens(
     let mut sum = 0;
     let ingredients_with_allergens: HashSet<String> = possible_allergenic_ingredients
         .values()
-        .cloned()
-        .flatten()
+        .flatten().cloned()
         .collect();
     for food in food_list.iter() {
         sum += food
@@ -98,7 +96,7 @@ struct Solution;
 impl Solution {
     fn part1(food_list: &[Food]) -> usize {
         let possible_allergens = find_possible_allergenic_ingredients(food_list);
-        count_ingredients_without_allergens(&food_list, &possible_allergens)
+        count_ingredients_without_allergens(food_list, &possible_allergens)
     }
 
     fn part2(food_list: &[Food]) -> String {

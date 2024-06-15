@@ -61,17 +61,17 @@ mod tests {
 
     #[test]
     fn test_day18_part1() {
-        assert_eq!(arithmetic::calculate_p1(&"2 * 3 + (4 * 5)"), Ok(26));
+        assert_eq!(arithmetic::calculate_p1("2 * 3 + (4 * 5)"), Ok(26));
         assert_eq!(
-            arithmetic::calculate_p1(&"5 + (8 * 3 + 9 + 3 * 4 * 3)"),
+            arithmetic::calculate_p1("5 + (8 * 3 + 9 + 3 * 4 * 3)"),
             Ok(437)
         );
         assert_eq!(
-            arithmetic::calculate_p1(&"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
+            arithmetic::calculate_p1("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
             Ok(12240)
         );
         assert_eq!(
-            arithmetic::calculate_p1(&"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
+            arithmetic::calculate_p1("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
             Ok(13632)
         );
     }
@@ -79,20 +79,20 @@ mod tests {
     #[test]
     fn test_day18_part2() {
         assert_eq!(
-            arithmetic::calculate_p2(&"1 + (2 * 3) + (4 * (5 + 6))"),
+            arithmetic::calculate_p2("1 + (2 * 3) + (4 * (5 + 6))"),
             Ok(51)
         );
-        assert_eq!(arithmetic::calculate_p2(&"2 * 3 + (4 * 5)"), Ok(46));
+        assert_eq!(arithmetic::calculate_p2("2 * 3 + (4 * 5)"), Ok(46));
         assert_eq!(
-            arithmetic::calculate_p2(&"5 + (8 * 3 + 9 + 3 * 4 * 3)"),
+            arithmetic::calculate_p2("5 + (8 * 3 + 9 + 3 * 4 * 3)"),
             Ok(1445)
         );
         assert_eq!(
-            arithmetic::calculate_p2(&"5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
+            arithmetic::calculate_p2("5 * 9 * (7 * 3 * 3 + 9 * 3 + (8 + 6 * 4))"),
             Ok(669060)
         );
         assert_eq!(
-            arithmetic::calculate_p2(&"((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
+            arithmetic::calculate_p2("((2 + 4 * 9) * (6 + 9 * 8 + 6) + 6) + 2 + 4 * 2"),
             Ok(23340)
         );
     }

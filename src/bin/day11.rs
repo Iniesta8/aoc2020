@@ -46,16 +46,14 @@ fn count_visible_occupied_seats(grid: &[Vec<char>], pos: (i32, i32)) -> usize {
     let (x, y) = pos;
     let mut count = 0;
 
-    let directions = vec![
-        (0, 1),
+    let directions = [(0, 1),
         (1, 1),
         (1, 0),
         (1, -1),
         (0, -1),
         (-1, -1),
         (-1, 0),
-        (-1, 1),
-    ];
+        (-1, 1)];
 
     for (dir_x, dir_y) in directions.iter() {
         let mut xi = x + dir_x;
@@ -113,18 +111,18 @@ fn count_occupied_seats(grid: &[Vec<char>]) -> usize {
 struct Solution;
 
 impl Solution {
-    fn part1(mut grid: &mut Grid) -> usize {
+    fn part1(grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut grid, count_adjacent_occupied_seats, 4) {
+            if !simulate_once(grid, count_adjacent_occupied_seats, 4) {
                 break;
             }
         }
         count_occupied_seats(grid)
     }
 
-    fn part2(mut grid: &mut Grid) -> usize {
+    fn part2(grid: &mut Grid) -> usize {
         loop {
-            if !simulate_once(&mut grid, count_visible_occupied_seats, 5) {
+            if !simulate_once(grid, count_visible_occupied_seats, 5) {
                 break;
             }
         }
@@ -160,7 +158,7 @@ L.LLLLL.LL
 LLLLLLLLLL
 L.LLLLLL.L
 L.LLLLL.LL";
-        let mut grid = parse(&input1);
+        let mut grid = parse(input1);
         occupy_all_seats(&mut grid);
         let mut grid_p2 = grid.clone();
 

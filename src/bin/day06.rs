@@ -23,8 +23,8 @@ impl Solution {
             .map(|g| {
                 g.iter()
                     .fold(g[0].clone(), |acc, s| match part {
-                        Part::Part1 => acc.union(&s).cloned().collect(),
-                        Part::Part2 => acc.intersection(&s).cloned().collect(),
+                        Part::Part1 => acc.union(s).cloned().collect(),
+                        Part::Part2 => acc.intersection(s).cloned().collect(),
                     })
                     .len()
             })

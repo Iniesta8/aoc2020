@@ -120,7 +120,7 @@ where
     P: Copy + Hash + Eq,
 {
     let (cube_pos, cur_cube_state) = cube;
-    let neighbors = get_neighbors(&cur_cubes, &cube_pos);
+    let neighbors = get_neighbors(cur_cubes, cube_pos);
     let num_active_neighbors = neighbors
         .iter()
         .filter(|(_, &state)| state == CubeState::Active)
@@ -167,11 +167,11 @@ struct Solution;
 
 impl Solution {
     fn part1(cubes: &HashMap<(i32, i32, i32), CubeState>) -> usize {
-        conway(&cubes, get_neighbors_3d, 6)
+        conway(cubes, get_neighbors_3d, 6)
     }
 
     fn part2(cubes: &HashMap<(i32, i32, i32, i32), CubeState>) -> usize {
-        conway(&cubes, get_neighbors_4d, 6)
+        conway(cubes, get_neighbors_4d, 6)
     }
 }
 
@@ -209,7 +209,7 @@ mod tests {
 .#.
 ..#
 ###";
-        let cubes_3d = parse(&input);
+        let cubes_3d = parse(input);
         assert_eq!(Solution::part1(&cubes_3d), 112);
 
         let cubes_4d = cubes_3d

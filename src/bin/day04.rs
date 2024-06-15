@@ -41,11 +41,11 @@ fn hcl_valid(hcl: &str) -> bool {
 }
 
 fn ecl_valid(ecl: &str) -> bool {
-    vec!["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].contains(&ecl)
+    ["amb", "blu", "brn", "gry", "grn", "hzl", "oth"].contains(&ecl)
 }
 
 fn pid_valid(pid: &str) -> bool {
-    pid.len() == 9 && pid.chars().all(|c| c.is_digit(10))
+    pid.len() == 9 && pid.chars().all(|c| c.is_ascii_digit())
 }
 
 fn passport_valid_p2(passport: &Passport) -> bool {
@@ -70,11 +70,11 @@ struct Solution;
 
 impl Solution {
     fn part1(passports: &[Passport]) -> usize {
-        passports.iter().filter(|pp| passport_valid_p1(&pp)).count()
+        passports.iter().filter(|pp| passport_valid_p1(pp)).count()
     }
 
     fn part2(passports: &[Passport]) -> usize {
-        passports.iter().filter(|pp| passport_valid_p2(&pp)).count()
+        passports.iter().filter(|pp| passport_valid_p2(pp)).count()
     }
 }
 

@@ -21,7 +21,7 @@ fn parse(input: &str) -> (HashMap<usize, Rule>, Vec<String>) {
 
         let rule_raw: &str = line_token[1].trim();
 
-        if rule_raw.contains(&"|") {
+        if rule_raw.contains('|') {
             let rule_tok: Vec<&str> = rule_raw.split('|').collect();
 
             assert_eq!(rule_tok.len(), 2);
@@ -30,7 +30,6 @@ fn parse(input: &str) -> (HashMap<usize, Rule>, Vec<String>) {
                 .iter()
                 .map(|rules| {
                     rules
-                        .trim()
                         .split_whitespace()
                         .flat_map(str::parse)
                         .collect::<Vec<usize>>()
@@ -223,7 +222,7 @@ bababa
 abbbab
 aaabbb
 aaaabbb";
-        let (rules, messages) = parse(&input);
+        let (rules, messages) = parse(input);
         assert_eq!(Solution::part1(&messages, &rules), 2);
     }
 
@@ -277,7 +276,7 @@ aaaabbaaaabbaaa
 aaaabbaabbaaaaaaabbbabbbaaabbaabaaa
 babaaabbbaaabaababbaabababaaab
 aabbbbbaabbbaaaaaabbbbbababaaaaabbaaabba";
-        let (rules, messages) = parse(&input);
+        let (rules, messages) = parse(input);
         assert_eq!(Solution::part2(&messages, &rules), 12);
     }
 }

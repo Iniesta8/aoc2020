@@ -68,7 +68,7 @@ impl GameConsole {
         if self.ip >= self.memory.len() {
             return Instruction::Halt;
         }
-        let inst = self.memory[self.ip as usize].clone();
+        let inst = self.memory[self.ip].clone();
 
         let token: Vec<&str> = inst.split_whitespace().collect();
 

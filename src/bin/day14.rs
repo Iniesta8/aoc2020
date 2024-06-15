@@ -35,7 +35,7 @@ fn create_masks_v1(raw_mask: &str) -> (usize, usize) {
         .rev()
         .enumerate()
         .filter(|(_, c)| *c == '0' || *c == '1')
-        .fold((usize::MAX, 0 as usize), |(and, or), (i, c)| match c {
+        .fold((usize::MAX, 0_usize), |(and, or), (i, c)| match c {
             '0' => (and & !(1 << i), or),
             '1' => (and, or | (1 << i)),
             _ => (and, or),
@@ -76,11 +76,11 @@ fn write_to_mem(
 ) {
     match version {
         1 => {
-            let (and, or) = create_masks_v1(&mask);
+            let (and, or) = create_masks_v1(mask);
             mem.insert(address, (new_value & and) | or);
         }
         2 => {
-            for dest_address in calculate_dest_addresses(&mask, address) {
+            for dest_address in calculate_dest_addresses(mask, address) {
                 mem.insert(dest_address, new_value);
             }
         }
@@ -88,7 +88,7 @@ fn write_to_mem(
     }
 }
 
-fn process(version: usize, mut memory: &mut HashMap<usize, usize>, instructions: &[Instruction]) {
+fn process(version: usize, memory: &mut HashMap<usize, usize>, instructions: &[Instruction]) {
     let mut mask = String::from("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
     for inst in instructions.iter() {
         match inst {
@@ -96,7 +96,7 @@ fn process(version: usize, mut memory: &mut HashMap<usize, usize>, instructions:
                 mask = new_mask.clone();
             }
             Instruction::Write(address, new_value) => {
-                write_to_mem(version, &mut memory, *address, &mask, *new_value)
+                write_to_mem(version, memory, *address, &mask, *new_value)
             }
         }
     }
@@ -107,13 +107,13 @@ struct Solution;
 impl Solution {
     fn part1(instructions: &[Instruction]) -> usize {
         let mut memory = HashMap::new();
-        process(1, &mut memory, &instructions);
+        process(1, &mut memory, instructions);
         memory.values().sum()
     }
 
     fn part2(instructions: &[Instruction]) -> usize {
         let mut memory = HashMap::new();
-        process(2, &mut memory, &instructions);
+        process(2, &mut memory, instructions);
         memory.values().sum()
     }
 }
@@ -147,7 +147,7 @@ mask = XXXXXXXXXXXXXXXXXXXXXXXXXXXXX1XXXX0X
 mem[8] = 11
 mem[7] = 101
 mem[8] = 0";
-        assert_eq!(Solution::part1(&parse(&input)), 165);
+        assert_eq!(Solution::part1(&parse(input)), 165);
     }
 
     #[test]
@@ -157,6 +157,6 @@ mask = 000000000000000000000000000000X1001X
 mem[42] = 100
 mask = 00000000000000000000000000000000X0XX
 mem[26] = 1";
-        assert_eq!(Solution::part2(&parse(&input)), 208);
+        assert_eq!(Solution::part2(&parse(input)), 208);
     }
 }

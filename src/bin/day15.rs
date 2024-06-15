@@ -1,7 +1,7 @@
 use std::time::Instant;
 
 fn parse(input: &str) -> Vec<usize> {
-    input.split(',').map(|n| n.parse().ok()).flatten().collect()
+    input.split(',').filter_map(|n| n.parse().ok()).collect()
 }
 
 struct Solution;
@@ -32,7 +32,7 @@ impl Solution {
 
 fn main() {
     let input = "5,2,8,16,18,0,1";
-    let starting_numbers = parse(&input);
+    let starting_numbers = parse(input);
 
     let timer = Instant::now();
     println!(
@@ -55,6 +55,6 @@ mod tests {
     #[test]
     fn test_day15_part1() {
         let input = "0,3,6";
-        assert_eq!(Solution::solve(&parse(&input), 2020), 436);
+        assert_eq!(Solution::solve(&parse(input), 2020), 436);
     }
 }

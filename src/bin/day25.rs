@@ -2,7 +2,7 @@ use std::fs;
 use std::time::Instant;
 
 fn read_pubkeys_from_file(input: &str) -> (usize, usize) {
-    let keys: Vec<usize> = input.trim().lines().map(str::parse).flatten().collect();
+    let keys: Vec<usize> = input.trim().lines().flat_map(str::parse).collect();
 
     (keys[0], keys[1])
 }

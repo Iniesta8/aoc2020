@@ -1,7 +1,7 @@
 use std::fs;
 
 fn parse(input: &str) -> Vec<usize> {
-    input.lines().map(str::parse).flatten().collect()
+    input.lines().flat_map(str::parse).collect()
 }
 
 fn build_chain(adapters: &mut Vec<usize>) {
@@ -85,7 +85,7 @@ mod tests {
 6
 12
 4";
-        let mut adapters = parse(&input1);
+        let mut adapters = parse(input1);
         build_chain(&mut adapters);
 
         assert_eq!(Solution::part1(&adapters), 35);
@@ -124,7 +124,7 @@ mod tests {
 10
 3";
 
-        adapters = parse(&input2);
+        adapters = parse(input2);
         build_chain(&mut adapters);
 
         assert_eq!(Solution::part1(&adapters), 220);

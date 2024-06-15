@@ -73,7 +73,7 @@ impl Solution {
         let num_cups = 1_000_000;
 
         // build poor man's linked list
-        let mut cups_list: Vec<usize> = (1..=(num_cups + 1)).into_iter().collect();
+        let mut cups_list: Vec<usize> = (1..=(num_cups + 1)).collect();
         cups_list[num_cups] = cups[0];
         for w in cups.windows(2) {
             cups_list[w[0]] = w[1];
@@ -91,7 +91,7 @@ impl Solution {
 
 fn main() {
     let input = "123487596";
-    let cups: Vec<usize> = parse(&input);
+    let cups: Vec<usize> = parse(input);
 
     let timer = Instant::now();
     println!(
@@ -115,7 +115,7 @@ mod tests {
     #[test]
     fn test_day23() {
         let input = "389125467";
-        let cups: Vec<usize> = parse(&input);
+        let cups: Vec<usize> = parse(input);
         assert_eq!(Solution::part1(cups.clone()), String::from("67384529"));
         assert_eq!(Solution::part2(cups), 149245887792);
     }

@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use std::fs;
 
 fn parse(input: &str) -> Vec<usize> {
-    input.lines().map(str::parse).flatten().collect()
+    input.lines().flat_map(str::parse).collect()
 }
 
 fn find_invalid_number(data: &[usize], wlen: usize) -> Option<usize> {
@@ -44,7 +44,7 @@ struct Solution;
 
 impl Solution {
     fn part1(data: &[usize]) -> usize {
-        find_invalid_number(&data, 25).unwrap()
+        find_invalid_number(data, 25).unwrap()
     }
 
     fn part2(data: &[usize], target: usize) -> usize {
@@ -88,7 +88,7 @@ mod tests {
 277
 309
 576";
-        let data = parse(&input);
+        let data = parse(input);
         assert_eq!(find_invalid_number(&data, 5), Some(127));
         assert_eq!(find_enc_weakness(&data, 127), 62);
     }

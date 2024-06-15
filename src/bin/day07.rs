@@ -62,7 +62,7 @@ impl Solution {
                 + 1
         }
 
-        sum_bags(MY_BAG, &bags) - 1 as u32
+        sum_bags(MY_BAG, bags) - 1_u32
     }
 }
 

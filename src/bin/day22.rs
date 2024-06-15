@@ -6,7 +6,7 @@ use std::time::Instant;
 fn parse(input: &str) -> Vec<VecDeque<usize>> {
     input
         .split("\n\n")
-        .map(|line| line.lines().skip(1).map(str::parse).flatten().collect())
+        .map(|line| line.lines().skip(1).flat_map(str::parse).collect())
         .collect()
 }
 
@@ -128,13 +128,13 @@ fn play_recursive_combat(decks: &mut [VecDeque<usize>], game: &mut usize) -> usi
 struct Solution;
 
 impl Solution {
-    fn part1(mut decks: &mut [VecDeque<usize>]) -> usize {
-        let winner = play_crab_combat(&mut decks);
+    fn part1(decks: &mut [VecDeque<usize>]) -> usize {
+        let winner = play_crab_combat(decks);
         calc_score(&decks[winner])
     }
 
-    fn part2(mut decks: &mut [VecDeque<usize>]) -> usize {
-        let winner = play_recursive_combat(&mut decks, &mut 1);
+    fn part2(decks: &mut [VecDeque<usize>]) -> usize {
+        let winner = play_recursive_combat(decks, &mut 1);
 
         println!("== Post-game results ==");
         println!("Player 1's deck: {:?}", decks[0]);
@@ -184,9 +184,9 @@ Player 2:
 4
 7
 10";
-        let mut decks: Vec<VecDeque<usize>> = parse(&input);
+        let mut decks: Vec<VecDeque<usize>> = parse(input);
         assert_eq!(Solution::part1(&mut decks), 306);
-        decks = parse(&input);
+        decks = parse(input);
         assert_eq!(Solution::part2(&mut decks), 291);
     }
 }

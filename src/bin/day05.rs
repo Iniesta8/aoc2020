@@ -21,10 +21,7 @@ impl Solution {
     fn part2(seat_ids: &mut Vec<u32>) -> Option<u32> {
         seat_ids.sort_unstable();
 
-        match seat_ids.windows(2).find(|w| w[0] + 1 != w[1]) {
-            Some(w) => Some(w[0] + 1),
-            _ => None,
-        }
+        seat_ids.windows(2).find(|w| w[0] + 1 != w[1]).map(|w| w[0] + 1)
     }
 }
 
